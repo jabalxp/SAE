@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hall da Fama - Steam Explorer</title>
+    <link id="favicon" rel="icon" href="https://store.steampowered.com/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* MESMO CSS DO INDEX PARA MANTER A IDENTIDADE VISUAL */
+        :root {
+            --primary-color: #00f3ff; --secondary-color: #bc13fe; --bg-dark: #050b14; --bg-panel: rgba(16, 26, 46, 0.95); --glass-border: rgba(255, 255, 255, 0.1); --text-main: #e0e6ed; --text-dim: #94a3b8; --success: #00ff9d; --warning: #ffbd2e; --danger: #ff0055; --font-display: 'Orbitron', sans-serif; --font-body: 'Rajdhani', sans-serif; --card-radius: 12px;
+        }
+        /* Temas (Simplificado para caber, mas suporta a lógica) */
+        body.theme-retro { --primary-color: #fca311; --bg-dark: #101010; --font-display: 'Press Start 2P', cursive; --card-radius: 0px; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: var(--font-body); min-height: 100vh; }
+        .container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px; }
+        
+        /* HEADER */
+        .main-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); }
+        .site-title { font-family: var(--font-display); font-size: 24px; background: linear-gradient(90deg, var(--text-main), var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .main-nav { display: flex; gap: 10px; }
+        .nav-btn { background: transparent; border: 1px solid transparent; color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: var(--font-display); text-decoration: none; font-size: 12px; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: var(--primary-color); border-color: var(--glass-border); }
+
+        /* HALL SPECIFIC */
+        .hall-intro { text-align: center; margin-bottom: 40px; padding: 40px; background: linear-gradient(to bottom, rgba(255,215,0,0.1), transparent); border-radius: 20px; border: 1px solid #ffd700; }
+        .hall-title { font-family: var(--font-display); font-size: 48px; color: #ffd700; text-shadow: 0 0 20px rgba(255,215,0,0.5); margin-bottom: 10px; }
+        .hall-stats { font-size: 20px; color: #fff; font-weight: bold; }
+        
+        .hof-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+        .hof-card { 
+            position: relative; aspect-ratio: 2/3; border-radius: 10px; overflow: hidden; 
+            border: 2px solid #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.2); 
+            transition: 0.3s; cursor: pointer; transform-style: preserve-3d;
+            background: #000;
+        }
+        .hof-card:hover { transform: scale(1.05) translateY(-10px); box-shadow: 0 0 40px rgba(255,215,0,0.6); z-index: 5; }
+        .hof-img { width: 100%; height: 100%; object-fit: cover; }
+        .hof-overlay { 
+            position: absolute; bottom: 0; left: 0; width: 100%; 
+            background: linear-gradient(to top, rgba(0,0,0,1), transparent); padding: 20px 10px; text-align: center; 
+        }
+        .hof-game-title { font-family: var(--font-display); font-size: 14px; color: #ffd700; margin-bottom: 5px; }
+        .hof-shine {
+            position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-25deg); animation: shine 3s infinite;
+        }
+        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+
+        /* LOADER */
+        #scan-progress-container { width: 100%; height: 4px; background: #333; margin-top: 20px; display:none; }
+        #scan-progress-bar { height: 100%; width: 0%; background: #ffd700; transition: width 0.2s; box-shadow: 0 0 10px #ffd700; }
+        .loader-text { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div class="logo-area">
+                <i class="fab fa-steam fa-2x" style="color:#ffd700"></i>
+                <span class="site-title" style="background:linear-gradient(90deg, #fff, #ffd700); -webkit-background-clip:text;">HALL DA FAMA</span>
+            </div>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-btn">HOME</a>
+                <a href="Roleta.html" class="nav-btn">ROLETA</a>
+                <a href="#" class="nav-btn active">HALL DA FAMA</a>
+            </nav>
+        </header>
+
+        <div class="hall-intro">
+            <h1 class="hall-title">GALERIA DE TROFÉUS</h1>
+            <div class="hall-stats">
+                Platinas Confirmadas: <span id="platCount" style="color:#ffd700">0</span>
+            </div>
+            <div id="scan-progress-container">
+                <div id="scan-progress-bar"></div>
+                <div class="loader-text" id="scan-text">Procurando ouro na sua biblioteca...</div>
+            </div>
+        </div>
+
+        <div class="hof-grid" id="hallGrid">
+            <!-- Cards serão injetados aqui -->
+        </div>
+    </div>
+
+    <script>
+        // Configurações
+        const STEAM_API_KEY = '8B07FE7C9405216BF61C1F439E93922B';
+        const PROXIES = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?'];
+        
+        let gamesToScan = [];
+        let platinumsFound = 0;
+        let activeWorkers = 0;
+        const MAX_WORKERS = 12; // Rápido para escanear
+
+        window.onload = () => {
+            const steamId = localStorage.getItem('lastSteamId');
+            if(!steamId) {
+                alert("Por favor, faça uma busca na Home primeiro para carregar seu perfil.");
+                window.location.href = 'index.html';
+                return;
+            }
+            startHallScan(steamId);
+        };
+
+        async function fetchSteam(url) {
+            for (const proxy of PROXIES) {
+                try {
+                    const res = await fetch(proxy + encodeURIComponent(url));
+                    if (res.ok) return await res.json();
+                } catch (e) {}
+            }
+            return null; // Falha silenciosa para continuar scan
+        }
+
+        async function startHallScan(steamId) {
+            document.getElementById('scan-progress-container').style.display = 'block';
+            
+            // 1. Pegar jogos
+            const data = await fetchSteam(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&include_appinfo=1&format=json`);
+            
+            if(data && data.response && data.response.games) {
+                // Prioriza jogos com stats visíveis e ordena por tempo de jogo (maior chance de platina)
+                gamesToScan = data.response.games
+                    .filter(g => g.has_community_visible_stats)
+                    .sort((a,b) => b.playtime_forever - a.playtime_forever);
+                
+                // Inicia Workers
+                for(let i=0; i<MAX_WORKERS; i++) processQueue(steamId);
+            } else {
+                document.getElementById('scan-text').innerText = "Erro ao carregar biblioteca ou perfil privado.";
+            }
+        }
+
+        async function processQueue(steamId) {
+            if(gamesToScan.length === 0) {
+                if(activeWorkers === 0) document.getElementById('scan-text').innerText = "Varredura Completa!";
+                return;
+            }
+
+            activeWorkers++;
+            const game = gamesToScan.shift();
+            updateProgress();
+
+            try {
+                const url = `http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&appid=${game.appid}`;
+                // Usar um proxy aleatório para balancear
+                const proxy = PROXIES[Math.floor(Math.random() * PROXIES.length)];
+                const res = await fetch(proxy + encodeURIComponent(url));
+                const achData = await res.json();
+
+                if(achData.playerstats && achData.playerstats.achievements) {
+                    const all = achData.playerstats.achievements;
+                    const unlocked = all.filter(a => a.achieved === 1).length;
+                    const total = all.length;
+                    
+                    // Se for 100% (Platina)
+                    if(total > 0 && unlocked === total) {
+                        addPlatinumCard(game);
+                    }
+                }
+            } catch(e) {
+                // Ignora erros de jogos específicos
+            } finally {
+                activeWorkers--;
+                processQueue(steamId);
+            }
+        }
+
+        function addPlatinumCard(game) {
+            platinumsFound++;
+            document.getElementById('platCount').innerText = platinumsFound;
+            
+            const grid = document.getElementById('hallGrid');
+            const card = document.createElement('div');
+            card.className = 'hof-card';
+            card.innerHTML = `
+                <div class="hof-shine"></div>
+                <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.appid}/library_600x900_2x.jpg" 
+                     class="hof-img" 
+                     onerror="this.src='https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.appid}/header.jpg'">
+                <div class="hof-overlay">
+                    <div class="hof-game-title">${game.name}</div>
+                    <div style="font-size:10px; color:#ffd700"><i class="fas fa-trophy"></i> PLATINADO</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        }
+
+        function updateProgress() {
+            // Apenas um efeito visual simples na barra
+            const bar = document.getElementById('scan-progress-bar');
+            // Como não sabemos o total inicial exato de quem vai falhar, fazemos a barra andar
+            // baseado no tamanho restante da fila inversamente, ou apenas indicativo.
+            // Aqui simplificado:
+            bar.style.width = '50%'; // Mantém ativo visualmente
+        }
+
+    </script>
+</body>
+</html>
