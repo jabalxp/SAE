@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SteamTrack</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Steam Achievements Explorer</title>
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#66c0f4">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SteamTrack">
+    <meta name="apple-mobile-web-app-title" content="SAE">
     <link rel="apple-touch-icon" href="icons/icon-152x152.png">
     <!-- Fontes -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -220,11 +219,11 @@
 
         /* HEADER */
         .main-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); position: relative; z-index: 10000; flex-wrap: wrap; gap: 15px; background: var(--bg-panel); border-radius: 15px; }
-        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-area { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
         .logo-icon { font-size: 28px; color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
         .site-title { font-family: var(--font-display); font-size: 18px; background: linear-gradient(90deg, var(--text-main), var(--primary-color)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .main-nav { display: flex; gap: 10px; align-items: center; }
+        .main-nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .nav-btn { 
             background: transparent; border: 1px solid transparent; color: var(--text-dim); 
             padding: 6px 12px; border-radius: 15px; cursor: pointer; 
@@ -266,18 +265,18 @@
         
         .header-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
         
-        .theme-select { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-main); padding: 6px 10px; border-radius: 15px; font-family: var(--font-body); font-weight: bold; cursor: pointer; outline: none; font-size: 12px; }
+        .theme-select { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-main); padding: 6px 10px; border-radius: 15px; font-family: var(--font-body); font-weight: bold; cursor: pointer; outline: none; font-size: 12px; max-width: 100px; }
         body.theme-retro .theme-select { border-radius: 0px; border: 2px solid var(--glass-border); }
         .theme-select option { background: var(--bg-dark); color: var(--text-main); }
         
-        .icon-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-main); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .icon-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-main); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
         .icon-btn:hover { background: var(--primary-color); color: #000; }
         body.theme-retro .icon-btn { border-radius: 0px; border: 2px solid var(--glass-border); }
 
         /* SEARCH */
         .search-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; transition: all 0.5s ease; }
         .search-section.active { min-height: auto; flex-direction: row; justify-content: flex-end; margin-bottom: 20px; }
-        .search-box { position: relative; width: 100%; max-width: 600px; }
+        .search-box { position: relative; width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 10px; }
         .search-input { width: 100%; padding: 18px 25px; padding-right: 60px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 50px; color: var(--text-main); font-family: var(--font-display); font-size: 16px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
         .search-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 15px rgba(0,243,255,0.2); }
         body.theme-retro .search-input { border-radius: 0px; border-width: 2px; font-family: var(--font-body); font-size: 12px; }
@@ -692,6 +691,169 @@
         .heatmap-tooltip strong {
             color: var(--success);
         }
+
+        /* ========== RESPONSIVE DESIGN ========== */
+        @media (max-width: 1024px) {
+            .games-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+            .profile-hero { flex-direction: column; text-align: center; gap: 20px; }
+            .profile-left { flex-direction: column; align-items: center; }
+            .profile-avatar { width: 100px; height: 100px; }
+            .profile-stats { justify-content: center; flex-wrap: wrap; }
+        }
+
+        @media screen and (max-width: 768px) {
+            .container { padding: 10px !important; }
+            
+            .main-header { 
+                flex-direction: column !important; 
+                gap: 12px !important; 
+                padding: 12px !important; 
+                align-items: center !important;
+            }
+            .logo-area { order: 1; width: 100%; justify-content: center; }
+            .main-nav { 
+                order: 2; 
+                flex-wrap: wrap !important; 
+                justify-content: center !important; 
+                gap: 6px !important; 
+                width: 100%;
+            }
+            .header-controls { 
+                order: 3; 
+                flex-wrap: wrap !important; 
+                justify-content: center !important; 
+                gap: 6px !important; 
+                width: 100% !important;
+            }
+            .nav-btn { padding: 6px 10px !important; font-size: 10px !important; }
+            .nav-btn.primary { padding: 8px 16px !important; font-size: 11px !important; }
+            .nav-menu-btn { padding: 6px 12px !important; font-size: 10px !important; }
+            .nav-menu-dropdown { 
+                position: fixed !important; 
+                top: auto !important; 
+                bottom: 0 !important; 
+                left: 0 !important; 
+                right: 0 !important; 
+                border-radius: 20px 20px 0 0 !important; 
+                min-width: 100% !important; 
+                z-index: 9999 !important; 
+            }
+            
+            .icon-btn { width: 34px !important; height: 34px !important; font-size: 13px !important; }
+            .theme-select { padding: 5px 8px !important; font-size: 11px !important; max-width: 80px !important; }
+            .header-xp-container { padding: 4px 8px !important; font-size: 10px !important; }
+            
+            .search-section { padding: 15px !important; min-height: auto !important; }
+            .search-box { flex-direction: column !important; gap: 10px !important; max-width: 100% !important; }
+            .search-input { 
+                width: 100% !important; 
+                max-width: none !important; 
+                font-size: 14px !important; 
+                padding: 14px 18px !important;
+                padding-right: 50px !important;
+            }
+            .search-btn { 
+                position: absolute !important;
+                right: 5px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                width: 40px !important;
+                height: 40px !important;
+                padding: 0 !important;
+            }
+            
+            .profile-hero { padding: 15px !important; flex-direction: column !important; text-align: center !important; }
+            .profile-stats { gap: 8px !important; justify-content: center !important; flex-wrap: wrap !important; }
+            .stat-item { min-width: 70px !important; padding: 8px !important; }
+            .stat-value { font-size: 16px !important; }
+            .stat-label { font-size: 9px !important; }
+            
+            .library-controls { flex-direction: column !important; gap: 10px !important; padding: 12px !important; }
+            .filter-group { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; gap: 6px !important; }
+            .filter-select, .filter-btn { flex: 1 1 auto !important; min-width: 70px !important; font-size: 10px !important; padding: 8px !important; }
+            
+            .games-grid { 
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important; 
+                gap: 10px !important; 
+                padding: 10px !important; 
+            }
+            .game-card { min-height: 160px !important; }
+            .game-title { font-size: 11px !important; }
+            .game-stats { font-size: 9px !important; }
+            
+            .friends-list { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important; }
+            
+            .achievements-modal { width: 95% !important; max-height: 85vh !important; padding: 15px !important; }
+            .modal-header { flex-direction: column !important; gap: 15px !important; text-align: center !important; }
+            .modal-game-cover { width: 100% !important; max-width: 200px !important; }
+            .achievements-grid { grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)) !important; gap: 8px !important; }
+            .achievement-item { padding: 8px !important; }
+            .achievement-icon { width: 45px !important; height: 45px !important; }
+            
+            .signature-modal { width: 95% !important; padding: 15px !important; }
+            .signature-preview { transform: scale(0.5) !important; transform-origin: top center !important; }
+            
+            .chart-modal { width: 95% !important; padding: 15px !important; }
+            
+            .site-title { font-size: 16px !important; }
+            .logo-icon { font-size: 24px !important; }
+            .profile-name { font-size: 18px !important; }
+            
+            .heatmap-container { overflow-x: auto !important; }
+            .heatmap-grid { gap: 2px !important; }
+            .heatmap-cell { width: 10px !important; height: 10px !important; }
+            
+            .ranking-container { flex-direction: column !important; }
+            .ranking-col { width: 100% !important; }
+            
+            .showcase-section { padding: 15px !important; }
+            .showcase-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+            
+            .section-title { font-size: 14px !important; padding: 8px 15px !important; }
+        }
+
+        @media screen and (max-width: 480px) {
+            .main-header { padding: 10px !important; gap: 8px !important; }
+            .site-title { font-size: 14px !important; }
+            .logo-icon { font-size: 20px !important; }
+            .nav-btn { padding: 5px 8px !important; font-size: 9px !important; }
+            .nav-btn.primary { padding: 6px 12px !important; font-size: 10px !important; }
+            .nav-menu-btn { padding: 5px 10px !important; font-size: 9px !important; }
+            
+            .header-controls { gap: 5px !important; }
+            .icon-btn { width: 30px !important; height: 30px !important; font-size: 11px !important; }
+            .theme-select { padding: 4px 6px !important; font-size: 10px !important; max-width: 70px !important; }
+            .header-xp-container { display: none !important; }
+            
+            .search-input { font-size: 13px !important; padding: 12px 14px !important; padding-right: 45px !important; }
+            .search-btn { width: 35px !important; height: 35px !important; }
+            
+            .games-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+            .game-card { min-height: 140px !important; }
+            .game-cover { height: 75px !important; }
+            .game-info { padding: 8px !important; }
+            .game-title { font-size: 10px !important; }
+            
+            .profile-avatar { width: 65px !important; height: 65px !important; }
+            .profile-name { font-size: 16px !important; }
+            .profile-header-row { flex-direction: column !important; gap: 10px !important; }
+            .profile-actions { flex-wrap: wrap !important; justify-content: center !important; }
+            .action-btn { font-size: 10px !important; padding: 6px 10px !important; }
+            
+            .stat-item { min-width: 55px !important; padding: 6px !important; }
+            .stat-value { font-size: 14px !important; }
+            .stat-label { font-size: 8px !important; }
+            
+            .achievements-grid { grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)) !important; }
+            .achievement-icon { width: 38px !important; height: 38px !important; }
+            
+            .filter-group { gap: 4px !important; }
+            .filter-select, .filter-btn { font-size: 9px !important; padding: 6px !important; min-width: 55px !important; }
+            
+            .showcase-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+            
+            .toast { left: 10px !important; right: 10px !important; bottom: 10px !important; max-width: none !important; font-size: 12px !important; padding: 10px 15px !important; }
+        }
     </style>
 </head>
 <body>
@@ -724,7 +886,7 @@
         <header class="main-header">
             <div class="logo-area">
                 <i class="fab fa-steam logo-icon"></i>
-                <h1 class="site-title">SteamTrack</h1>
+                <h1 class="site-title">SAE</h1>
             </div>
             <nav class="main-nav">
                 <a href="index.html" class="nav-btn primary active"><i class="fas fa-gamepad"></i> <span data-i18n-key="nav_library">BIBLIOTECA</span></a>
@@ -990,7 +1152,7 @@
                         <div class="sig-game-row"><span id="sigGameProg">0/0</span><span id="sigGamePct">0%</span></div>
                         <div class="sig-progress-bg"><div class="sig-progress-fill" id="sigGameBar" style="width:0%"></div></div>
                     </div>
-                    <div class="sig-watermark">SteamTrack</div>
+                    <div class="sig-watermark">Steam Explorer</div>
                 </div>
             </div>
             <div class="sig-controls"><button class="action-btn" onclick="downloadSignature()"><i class="fas fa-download"></i> Baixar Imagem</button></div>
@@ -1079,7 +1241,7 @@
                     <div style="display: flex; gap: 15px;">
                         <div style="width: 4px; background: #5865F2; border-radius: 2px;"></div>
                         <div>
-                            <div style="font-weight: bold; color: #fff; margin-bottom: 5px;" id="discordPreviewTitle">🎮 SteamTrack</div>
+                            <div style="font-weight: bold; color: #fff; margin-bottom: 5px;" id="discordPreviewTitle">🎮 Steam Achievements Explorer</div>
                             <div style="color: #dcddde; font-size: 13px;" id="discordPreviewBody">
                                 <strong>Jogador:</strong> <span id="discordPlayerName">-</span><br>
                                 <strong>Platinas:</strong> <span id="discordPlatinas">-</span><br>
@@ -2173,8 +2335,7 @@
         function renderFriendsList(friends) {
             const container = document.getElementById('friendsContainer');
             friends.forEach(f => {
-                const safeName = f.personaname.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                container.innerHTML += `<button class="friend-card" data-name="${f.personaname.toLowerCase()}" onclick="triggerSearch('${f.steamid}')" title="${f.personaname}"><img src="${f.avatarfull}" class="friend-avatar"><div class="friend-name">${f.personaname}</div></button>`;
+                container.innerHTML += `<button class="friend-card" onclick="triggerSearch('${f.steamid}')" title="${f.personaname}"><img src="${f.avatarfull}" class="friend-avatar"><div class="friend-name">${f.personaname}</div></button>`;
             });
         }
 
@@ -2290,10 +2451,10 @@
             const shareType = document.querySelector('input[name="discordShareType"]:checked').value;
             
             let embed = {
-                title: '🎮 SteamTrack',
+                title: '🎮 Steam Achievements Explorer',
                 color: 5793266, // Cor azul/roxo
                 thumbnail: { url: currentState.user?.avatarfull },
-                footer: { text: 'SteamTrack • github.com/jabalxp/SAE' },
+                footer: { text: 'Steam Achievements Explorer • github.com/jabalxp/SAE' },
                 timestamp: new Date().toISOString()
             };
             
@@ -2704,17 +2865,7 @@
         function filterGames() { const term = document.getElementById('gameSearchInput').value.toLowerCase(); document.querySelectorAll('.game-card').forEach(card => { const pct = parseFloat(card.dataset.percent); let show = card.dataset.name.includes(term); if (currentState.activeFilter === 'platinado' && pct < 100) show = false; if (currentState.activeFilter === 'platinando' && (pct < 70 || pct === 100)) show = false; show ? card.classList.remove('hidden-card') : card.classList.add('hidden-card'); }); }
         function setFilter(type) { currentState.activeFilter = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === type)); filterGames(); }
         function sortGames() { const type = document.getElementById('sortSelect').value; if (type === 'playtime') currentState.games.sort((a,b) => b.playtime_forever - a.playtime_forever); if (type === 'completion') currentState.games.sort((a,b) => b.percent - a.percent); if (type === 'name') currentState.games.sort((a,b) => a.name.localeCompare(b.name)); renderGamesGrid(); }
-        function filterFriends() { 
-            const term = document.getElementById('friendSearchInput').value.toLowerCase().trim(); 
-            document.querySelectorAll('.friend-card').forEach(card => { 
-                const name = card.dataset.name || card.querySelector('.friend-name')?.textContent.toLowerCase() || '';
-                if (term === '' || name.includes(term)) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            }); 
-        }
+        function filterFriends() { const term = document.getElementById('friendSearchInput').value.toLowerCase(); document.querySelectorAll('.friend-card').forEach(c => c.dataset.name.includes(term) ? c.classList.remove('hidden') : c.classList.add('hidden')); }
         function toggleTheme() { const b = document.body; if (!b.className) b.className = 'theme-matrix'; else if (b.className === 'theme-matrix') b.className = 'theme-fire'; else b.className = ''; }
         
         function changeTheme(theme) { 
@@ -2920,7 +3071,7 @@
             const platinas = document.getElementById('totalPlatinum').innerText;
             const conquistas = document.getElementById('totalAchievements').innerText;
             const url = `${window.location.origin}/profile.html?id=${currentState.steamId}`;
-            const text = `🎮 Perfil Steam de ${username}\n🏆 ${platinas} Platinas | ⭐ ${conquistas} Conquistas\n\nConfira meu perfil no SteamTrack!`;
+            const text = `🎮 Perfil Steam de ${username}\n🏆 ${platinas} Platinas | ⭐ ${conquistas} Conquistas\n\nConfira meu perfil no Steam Explorer!`;
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
             document.getElementById('shareMenu').classList.remove('active');
         }

@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desafio Diário - SteamTrack</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Desafio Diário - Steam Achievements Explorer</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="languages.js"></script>
@@ -367,11 +366,65 @@
         .history-status { font-weight: bold; }
         .history-status.success { color: var(--success); }
         .history-status.failed { color: var(--danger); }
+
+        /* ========== RESPONSIVE DESIGN ========== */
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 15px; padding: 15px; }
+            .main-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .nav-btn { padding: 6px 12px; font-size: 10px; }
+            .nav-menu-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 20px 20px 0 0; min-width: 100%; }
+            .logo { font-size: 14px; }
+            
+            .container { padding: 15px 10px; }
+            
+            .challenge-hero { padding: 20px 15px; }
+            .challenge-title { font-size: 22px; }
+            .challenge-subtitle { font-size: 14px; }
+            
+            .challenge-timer { gap: 10px; }
+            .timer-block { padding: 10px 15px; }
+            .timer-value { font-size: 24px; }
+            .timer-label { font-size: 10px; }
+            
+            .challenge-types { grid-template-columns: 1fr; gap: 15px; }
+            .challenge-type-card { padding: 20px; }
+            .challenge-icon { font-size: 30px; }
+            .challenge-name { font-size: 14px; }
+            
+            .current-challenge { padding: 20px 15px; }
+            .current-header { flex-direction: column; gap: 10px; text-align: center; }
+            .current-title { font-size: 16px; }
+            
+            .challenge-game { flex-direction: column; text-align: center; gap: 15px; }
+            .challenge-game-img { width: 100%; max-width: 280px; height: auto; }
+            .challenge-game-name { font-size: 16px; }
+            
+            .btn-row { flex-direction: column; gap: 10px; }
+            .btn { width: 100%; justify-content: center; }
+            
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-card { padding: 15px; }
+            .stat-value { font-size: 22px; }
+            
+            .history-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .history-date { min-width: auto; }
+        }
+
+        @media (max-width: 480px) {
+            .challenge-title { font-size: 18px; }
+            .timer-value { font-size: 20px; }
+            .timer-block { padding: 8px 12px; }
+            
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-value { font-size: 20px; }
+            
+            .btn { padding: 10px 20px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
     <header>
-        <a href="index.html" class="logo"><i class="fab fa-steam"></i> STEAMTRACK</a>
+        <a href="index.html" class="logo"><i class="fab fa-steam"></i> STEAM EXPLORER</a>
         <nav class="main-nav">
             <a href="desafio.html" class="nav-btn primary active"><i class="fas fa-calendar-check"></i> <span data-i18n-key="nav_challenge">DESAFIO</span></a>
             <div class="nav-menu-container">

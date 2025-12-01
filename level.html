@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Level - SteamTrack</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Sistema de Level - Steam Explorer</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="languages.js"></script>
@@ -324,6 +323,49 @@
             font-size: 12px;
             border-top: 1px solid var(--glass-border);
         }
+
+        /* ========== RESPONSIVE DESIGN ========== */
+        @media (max-width: 768px) {
+            .main-header { flex-direction: column; gap: 15px; padding: 15px 0; }
+            .main-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .nav-btn { padding: 6px 12px; font-size: 10px; }
+            .nav-menu-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 20px 20px 0 0; min-width: 100%; }
+            .site-title { font-size: 18px; }
+            .logo-icon { font-size: 24px; }
+            
+            .xp-hero { padding: 25px 15px; }
+            .level-badge { width: 100px; height: 100px; }
+            .level-badge-inner { width: 80px; height: 80px; }
+            .level-number { font-size: 28px; }
+            .xp-total { font-size: 24px; }
+            .xp-title { font-size: 14px; }
+            
+            .xp-breakdown { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .xp-stat-card { padding: 15px; }
+            .xp-stat-value { font-size: 24px; }
+            .xp-stat-label { font-size: 11px; }
+            
+            .xp-details { grid-template-columns: 1fr; }
+            
+            .rank-list { gap: 10px; }
+            .rank-item { flex-direction: column; text-align: center; gap: 10px; padding: 15px; }
+            .rank-position { width: 40px; height: 40px; font-size: 16px; }
+            .rank-avatar { width: 50px; height: 50px; }
+            
+            .container { padding: 15px 10px; }
+            .header-controls { flex-wrap: wrap; justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            .xp-breakdown { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .xp-stat-card { padding: 12px; }
+            .xp-stat-value { font-size: 20px; }
+            
+            .level-badge { width: 80px; height: 80px; }
+            .level-badge-inner { width: 65px; height: 65px; }
+            .level-number { font-size: 22px; }
+            .xp-total { font-size: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -437,7 +479,7 @@
         </div>
 
         <footer class="page-footer">
-            SteamTrack &copy; 2025 - Sistema de Progressão
+            Steam Explorer &copy; 2025 - Sistema de Progressão
         </footer>
     </div>
 

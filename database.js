@@ -1,7 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 
-// Usar variável de ambiente para o Fly.io ou caminho local
-const DB_SOURCE = process.env.DATABASE_PATH || 'steam_data.db';
+const DB_SOURCE = 'steam_data.db';
 
 const db = new sqlite3.Database(DB_SOURCE, (err) => {
     if (err) {
@@ -9,7 +8,7 @@ const db = new sqlite3.Database(DB_SOURCE, (err) => {
         console.error(err.message);
         throw err;
     } else {
-        console.log('Conectado ao banco de dados SQLite:', DB_SOURCE);
+        console.log('Conectado ao banco de dados SQLite.');
         db.serialize(() => {
             db.run(`CREATE TABLE IF NOT EXISTS games (
                 appid INTEGER PRIMARY KEY,

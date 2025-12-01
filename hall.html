@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hall da Fama - SteamTrack</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Hall da Fama - Steam Explorer</title>
     <!-- Mesmos estilos base do Index -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -71,6 +70,32 @@
         #scan-text { text-align: center; color: #888; margin-top: 20px; }
         .loader { border: 3px solid #333; border-top: 3px solid #ffd700; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display:none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ========== RESPONSIVE DESIGN ========== */
+        @media (max-width: 768px) {
+            .main-header { flex-direction: column; gap: 15px; padding: 15px 0; }
+            .main-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .nav-btn { padding: 6px 12px; font-size: 10px; }
+            .nav-menu-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 20px 20px 0 0; min-width: 100%; }
+            .site-title { font-size: 18px; }
+            
+            .hall-controls { flex-direction: column; }
+            .hall-search { width: 100%; }
+            .hall-btn { width: 100%; }
+            
+            .hall-title { font-size: 28px; }
+            
+            .hof-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+            .hof-card { aspect-ratio: 2/3; }
+            
+            .container { padding: 15px 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .site-title { font-size: 14px; }
+            .hall-title { font-size: 22px; }
+            .hof-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        }
     </style>
 </head>
 <body>

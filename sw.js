@@ -1,6 +1,6 @@
-// Service Worker for SteamTrack
-const CACHE_NAME = 'steamtrack-cache-v1';
-const DYNAMIC_CACHE = 'steamtrack-dynamic-v1';
+// Service Worker for Steam Achievement Explorer
+const CACHE_NAME = 'sae-cache-v1';
+const DYNAMIC_CACHE = 'sae-dynamic-v1';
 
 // Resources to cache immediately on install
 const STATIC_ASSETS = [
@@ -164,7 +164,7 @@ self.addEventListener('push', event => {
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title || 'SteamTrack', options)
+        self.registration.showNotification(data.title || 'Steam Achievement Explorer', options)
     );
 });
 

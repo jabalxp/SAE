@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparar Perfis - SteamTrack</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Comparar Perfis - Steam Explorer</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -279,10 +278,33 @@
         
         .loader.active { display: block; }
         
+        /* ========== RESPONSIVE DESIGN ========== */
         @media (max-width: 768px) {
-            .search-grid { grid-template-columns: 1fr; }
-            .vs-badge { text-align: center; }
-            .profiles-comparison { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 15px; padding: 15px 0; }
+            .main-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .nav-btn { padding: 6px 12px; font-size: 10px; }
+            .nav-menu-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 20px 20px 0 0; min-width: 100%; }
+            .logo { font-size: 16px; }
+            
+            .search-grid { grid-template-columns: 1fr; gap: 15px; }
+            .search-card { padding: 20px; }
+            .vs-badge { text-align: center; margin: 15px 0; }
+            
+            .profiles-comparison { grid-template-columns: 1fr; gap: 20px; }
+            .profile-card { padding: 15px; }
+            .profile-avatar { width: 60px; height: 60px; }
+            
+            .stats-comparison { flex-direction: column; gap: 15px; }
+            .stat-comparison { flex-direction: column; padding: 15px; }
+            
+            .container { padding: 15px 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .profile-avatar { width: 50px; height: 50px; }
+            .profile-name { font-size: 16px; }
+            .search-card h3 { font-size: 14px; }
+            .stat-label { font-size: 10px; }
         }
     </style>
 </head>

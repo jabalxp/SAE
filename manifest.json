@@ -1,6 +1,6 @@
 {
-    "name": "SteamTrack",
-    "short_name": "SteamTrack",
+    "name": "Steam Achievement Explorer",
+    "short_name": "SAE",
     "description": "Explore suas conquistas Steam com estatísticas detalhadas",
     "start_url": "/SAE/index.html",
     "display": "standalone",

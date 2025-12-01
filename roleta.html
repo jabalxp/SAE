@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roleta do Backlog - SteamTrack</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Roleta do Backlog - Steam Explorer</title>
     <link id="favicon" rel="icon" href="https://store.steampowered.com/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -119,10 +118,42 @@
         .spin-btn:hover { transform: scale(1.1); box-shadow: 0 0 40px var(--primary-color); }
         .spin-btn:disabled { background: #333; color: #666; box-shadow: none; transform: none; cursor: not-allowed; }
         
-        .filter-options { margin-bottom: 20px; display: flex; gap: 10px; background: var(--bg-panel); padding: 10px; border-radius: 15px; }
+        .filter-options { margin-bottom: 20px; display: flex; gap: 10px; background: var(--bg-panel); padding: 10px; border-radius: 15px; flex-wrap: wrap; justify-content: center; }
         .filter-opt { background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 5px 15px; border-radius: 15px; cursor: pointer; }
         .filter-opt.active { background: var(--primary-color); color: #000; border-color: var(--primary-color); }
 
+        /* ========== RESPONSIVE DESIGN ========== */
+        @media (max-width: 768px) {
+            .main-header { flex-direction: column; gap: 15px; padding: 15px 0; }
+            .main-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .nav-btn { padding: 6px 12px; font-size: 10px; }
+            .nav-menu-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 20px 20px 0 0; min-width: 100%; }
+            .site-title { font-size: 18px; }
+            
+            .slot-machine { height: 300px; max-width: 100%; border-radius: 15px; }
+            .game-title-big { font-size: 20px; }
+            .game-meta { font-size: 14px; }
+            .game-info-box { padding: 15px 20px; }
+            
+            .spin-btn { padding: 12px 30px; font-size: 18px; }
+            
+            .filter-options { padding: 8px; gap: 8px; }
+            .filter-opt { padding: 5px 10px; font-size: 11px; }
+            
+            .controls { flex-direction: column; width: 100%; }
+            .spin-btn { width: 100%; }
+            
+            .container { padding: 15px 10px; }
+            .roulette-wrapper { min-height: auto; padding: 20px 0; }
+        }
+
+        @media (max-width: 480px) {
+            .slot-machine { height: 250px; }
+            .game-title-big { font-size: 16px; }
+            .game-meta { font-size: 12px; }
+            .spin-btn { font-size: 16px; padding: 10px 25px; }
+            .filter-opt { font-size: 10px; padding: 4px 8px; }
+        }
     </style>
 </head>
 <body>

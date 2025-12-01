@@ -460,6 +460,43 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
         }
+
+        /* ========== RESPONSIVE DESIGN ========== */
+        @media (max-width: 768px) {
+            .main-header { flex-direction: column; gap: 15px; padding: 15px 0; }
+            .main-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .nav-btn { padding: 6px 12px; font-size: 10px; }
+            .nav-menu-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 20px 20px 0 0; min-width: 100%; }
+            .site-title { font-size: 18px; }
+            
+            .price-layout { grid-template-columns: 1fr; gap: 15px; }
+            .sidebar { padding: 15px; }
+            .sidebar h2 { font-size: 14px; }
+            
+            .game-list { max-height: 200px; }
+            .game-item { padding: 10px 12px; }
+            .game-item span { font-size: 12px; }
+            
+            .main-content { padding: 15px; }
+            .game-header { flex-direction: column; text-align: center; }
+            .game-cover { max-width: 200px; margin: 0 auto 15px; }
+            
+            .price-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .price-card { padding: 15px; }
+            .price-value { font-size: 18px; }
+            
+            .container { padding: 15px 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .price-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .price-card { padding: 12px; }
+            .price-value { font-size: 16px; }
+            .price-label { font-size: 10px; }
+            
+            .game-item img { width: 35px; height: 35px; }
+            .game-title { font-size: 14px; }
+        }
     </style>
 </head>
 <body>

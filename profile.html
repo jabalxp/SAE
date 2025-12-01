@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil Público - SteamTrack</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Perfil Público - Steam Explorer</title>
     
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="profile">
-    <meta property="og:title" content="Perfil Steam - SteamTrack" id="ogTitle">
+    <meta property="og:title" content="Perfil Steam - Steam Explorer" id="ogTitle">
     <meta property="og:description" content="Veja minhas conquistas e estatísticas Steam!" id="ogDesc">
     <meta property="og:image" content="" id="ogImage">
     <meta property="og:url" content="" id="ogUrl">
@@ -309,16 +308,44 @@
         
         .not-found i { font-size: 80px; color: var(--text-dim); margin-bottom: 20px; }
         
+        /* ========== RESPONSIVE DESIGN ========== */
         @media (max-width: 768px) {
+            header { flex-direction: column; gap: 15px; padding: 15px 0; }
+            .main-nav { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .nav-btn { padding: 6px 12px; font-size: 10px; }
+            .nav-menu-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; border-radius: 20px 20px 0 0; min-width: 100%; }
+            .logo { font-size: 16px; }
+            
             .profile-content { flex-direction: column; text-align: center; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .charts-section { grid-template-columns: 1fr; }
+            .profile-card { padding: 20px; }
+            .profile-avatar { width: 80px; height: 80px; }
+            .profile-name { font-size: 20px; }
+            
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 15px; }
+            .stat-value { font-size: 20px; }
+            
+            .charts-section { grid-template-columns: 1fr; gap: 15px; }
+            .chart-container { padding: 15px; }
+            
+            .games-section { padding: 15px; }
+            .container { padding: 15px 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-card { padding: 12px; }
+            .stat-value { font-size: 18px; }
+            .stat-label { font-size: 10px; }
+            
+            .profile-avatar { width: 60px; height: 60px; }
+            .profile-name { font-size: 18px; }
         }
     </style>
 </head>
 <body>
     <header>
-        <a href="index.html" class="logo"><i class="fab fa-steam"></i> STEAMTRACK</a>
+        <a href="index.html" class="logo"><i class="fab fa-steam"></i> STEAM EXPLORER</a>
         <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar</a>
     </header>
     
@@ -487,7 +514,7 @@
             document.getElementById('profileUrl').value = profileUrl;
             
             // Open Graph
-            document.getElementById('ogTitle').content = `${profile.personaname} - SteamTrack`;
+            document.getElementById('ogTitle').content = `${profile.personaname} - Steam Explorer`;
             document.getElementById('ogUrl').content = profileUrl;
             
             // Stats
@@ -596,7 +623,7 @@
         
         function shareTwitter() {
             const url = document.getElementById('profileUrl').value;
-            const text = `Confira meu perfil no SteamTrack! 🎮`;
+            const text = `Confira meu perfil no Steam Explorer! 🎮`;
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
         }
         
