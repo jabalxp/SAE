@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparar Perfis - SteamTrack</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="languages.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #00f3ff;
+            --secondary-color: #bc13fe;
+            --bg-dark: #050b14;
+            --bg-panel: rgba(16, 26, 46, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #e0e6ed;
+            --text-dim: #94a3b8;
+            --success: #00ff9d;
+            --gold: #ffd700;
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+        }
+        
+        /* TEMAS */
+        body.theme-matrix { --primary-color: #00ff41; --secondary-color: #008f11; --bg-dark: #000000; --bg-panel: rgba(0, 20, 0, 0.95); }
+        body.theme-fire { --primary-color: #ffbd2e; --secondary-color: #ff0055; --bg-dark: #1a0505; --bg-panel: rgba(40, 10, 10, 0.95); }
+        body.theme-retro { --primary-color: #fca311; --secondary-color: #14213d; --bg-dark: #101010; --bg-panel: #1a1a1a; --glass-border: #404040; --text-main: #e5e5e5; --text-dim: #a0a0a0; --font-display: 'Press Start 2P', cursive; }
+        body.theme-light { --primary-color: #007bff; --secondary-color: #6c757d; --bg-dark: #f8f9fa; --bg-panel: #ffffff; --glass-border: #dee2e6; --text-main: #212529; --text-dim: #6c757d; }
+        body.theme-dark { --primary-color: #e83e8c; --secondary-color: #6f42c1; --bg-dark: #000000; --bg-panel: rgba(20, 20, 20, 0.95); --glass-border: rgba(255,255,255,0.15); --text-main: #f8f9fa; --text-dim: #adb5bd; }
+        
+        @keyframes rgb-color-cycle {
+            0% { --primary-color: #ff00de; --secondary-color: #deff00; }
+            25% { --primary-color: #00ffde; --secondary-color: #de00ff; }
+            50% { --primary-color: #de00ff; --secondary-color: #00deff; }
+            75% { --primary-color: #ffde00; --secondary-color: #00ffde; }
+            100% { --primary-color: #ff00de; --secondary-color: #deff00; }
+        }
+        body.theme-rgb { animation: rgb-color-cycle 8s linear infinite; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: var(--font-body); 
+            background: var(--bg-dark); 
+            color: var(--text-main); 
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050b14 0%, #0a1628 50%, #050b14 100%);
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid rgba(0,243,255,0.2);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { font-family: var(--font-display); font-size: 20px; color: var(--primary-color); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .main-nav { display: flex; gap: 10px; align-items: center; }
+        .nav-btn { background: transparent; border: 1px solid transparent; color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: var(--font-display); text-decoration: none; font-size: 11px; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: var(--primary-color); }
+        .nav-btn.primary { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: #000; font-weight: bold; padding: 8px 20px; border: none; }
+        .nav-btn.primary:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--primary-color); }
+        .nav-menu-container { position: relative; }
+        .nav-menu-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(0,243,255,0.2); color: var(--text-main); padding: 8px 15px; border-radius: 15px; cursor: pointer; font-family: var(--font-display); font-size: 11px; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .nav-menu-btn:hover { background: rgba(255,255,255,0.15); color: var(--primary-color); }
+        .nav-menu-dropdown { position: absolute; top: 100%; right: 0; margin-top: 10px; background: var(--bg-panel); border: 1px solid rgba(0,243,255,0.2); border-radius: 12px; min-width: 180px; padding: 10px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s ease; z-index: 1000; }
+        .nav-menu-container:hover .nav-menu-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .nav-menu-dropdown a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-main); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .nav-menu-dropdown a:hover { background: rgba(0,243,255,0.1); color: var(--primary-color); }
+        .nav-menu-dropdown a i { width: 20px; text-align: center; color: var(--primary-color); }
+        
+        .search-section {
+            background: var(--bg-panel);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .search-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .search-box label {
+            font-family: var(--font-display);
+            color: var(--text-dim);
+        }
+        
+        .search-input {
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+            color: var(--text-main);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus { border-color: var(--primary-color); outline: none; }
+        
+        .vs-badge {
+            font-family: var(--font-display);
+            font-size: 36px;
+            color: var(--secondary-color);
+            text-shadow: 0 0 20px rgba(188,19,254,0.5);
+        }
+        
+        .compare-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto 0;
+            transition: all 0.3s;
+        }
+        
+        .compare-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,243,255,0.3); }
+        
+        .comparison-area { display: none; }
+        
+        .profiles-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .profile-card {
+            background: var(--bg-panel);
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        
+        .profile-card.winner { border-color: var(--gold); }
+        
+        .crown {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: var(--gold);
+        }
+        
+        .profile-card-inner { position: relative; }
+        
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--primary-color);
+        }
+        
+        .username { font-family: var(--font-display); font-size: 22px; margin: 15px 0; }
+        
+        .stats-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .stats-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .stats-list li:last-child { border: none; }
+        
+        .stat-name { color: var(--text-dim); }
+        
+        .stat-value { 
+            font-weight: bold;
+            font-family: var(--font-display);
+        }
+        
+        .stat-value.better { color: var(--success); }
+        
+        .common-games {
+            background: var(--bg-panel);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .games-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .games-table th, .games-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .games-table th { 
+            color: var(--text-dim);
+            font-weight: normal;
+            font-size: 14px;
+        }
+        
+        .game-row { display: flex; align-items: center; gap: 15px; }
+        .game-icon { width: 40px; height: 40px; border-radius: 5px; }
+        .game-name { font-weight: bold; }
+        
+        .progress-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .mini-progress {
+            width: 80px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .mini-fill { height: 100%; border-radius: 3px; }
+        .mini-fill.cyan { background: var(--primary-color); }
+        .mini-fill.purple { background: var(--secondary-color); }
+        
+        .percent-text { font-size: 12px; min-width: 40px; }
+        
+        .chart-section {
+            background: var(--bg-panel);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .chart-container { height: 300px; }
+        
+        .loader {
+            text-align: center;
+            padding: 50px;
+            display: none;
+        }
+        
+        .loader.active { display: block; }
+        
+        @media (max-width: 768px) {
+            .search-grid { grid-template-columns: 1fr; }
+            .vs-badge { text-align: center; }
+            .profiles-comparison { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="compare.html" class="logo"><i class="fas fa-users"></i> <span data-i18n-key="nav_compare">COMPARAR</span></a>
+        <nav class="main-nav">
+            <a href="compare.html" class="nav-btn primary active"><i class="fas fa-users"></i> <span data-i18n-key="nav_compare">COMPARAR</span></a>
+            <div class="nav-menu-container">
+                <button class="nav-menu-btn"><i class="fas fa-bars"></i> <span data-i18n-key="menu">MENU</span> <i class="fas fa-chevron-down" style="font-size:8px;"></i></button>
+                <div class="nav-menu-dropdown">
+                    <a href="index.html"><i class="fas fa-gamepad"></i> <span data-i18n-key="nav_library">Biblioteca</span></a>
+                    <a href="hall.html"><i class="fas fa-trophy"></i> <span data-i18n-key="hallOfFame">Hall da Fama</span></a>
+                    <a href="roleta.html"><i class="fas fa-dice"></i> <span data-i18n-key="nav_roulette">Roleta</span></a>
+                    <a href="level.html"><i class="fas fa-star"></i> <span data-i18n-key="nav_xp">Level / XP</span></a>
+                    <a href="prices.html"><i class="fas fa-chart-line"></i> <span data-i18n-key="priceHistory">Histórico Preços</span></a>
+                    <a href="museum.html"><i class="fas fa-landmark"></i> Museu 3D</a>
+                    <a href="wallpaper.html"><i class="fas fa-image"></i> <span data-i18n-key="nav_wallpaper">Wallpapers</span></a>
+                </div>
+            </div>
+            <select id="langSelector" onchange="setLanguage(this.value)" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 6px 10px; border-radius: 15px; cursor: pointer; font-size: 12px;">
+                <option value="pt">🇧🇷 PT</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="es">🇪🇸 ES</option>
+                <option value="fr">🇫🇷 FR</option>
+                <option value="de">🇩🇪 DE</option>
+                <option value="ru">🇷🇺 RU</option>
+                <option value="ja">🇯🇵 JA</option>
+                <option value="zh">🇨🇳 ZH</option>
+            </select>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <div class="search-section">
+            <div class="search-grid">
+                <div class="search-box">
+                    <label data-i18n-key="compare_profile1">JOGADOR 1</label>
+                    <input type="text" class="search-input" id="player1" data-i18n-placeholder="enterSteamId1" placeholder="Steam ID ou URL...">
+                </div>
+                <div class="vs-badge" data-i18n-key="compare_vs">VS</div>
+                <div class="search-box">
+                    <label data-i18n-key="compare_profile2">JOGADOR 2</label>
+                    <input type="text" class="search-input" id="player2" data-i18n-placeholder="enterSteamId2" placeholder="Steam ID ou URL...">
+                </div>
+            </div>
+            <button class="compare-btn" onclick="compareProfiles()">
+                <i class="fas fa-balance-scale"></i> <span data-i18n-key="compareNow">Comparar</span>
+            </button>
+        </div>
+        
+        <div class="loader" id="loader">
+            <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary-color);"></i>
+            <p style="margin-top: 15px;" data-i18n-key="loading">Comparando perfis...</p>
+        </div>
+        
+        <div class="comparison-area" id="comparisonArea">
+            <div class="profiles-comparison">
+                <div class="profile-card" id="profile1Card">
+                    <div class="profile-card-inner">
+                        <span class="crown" id="crown1" style="display: none;"><i class="fas fa-crown"></i></span>
+                        <img src="" alt="Avatar" class="avatar" id="avatar1">
+                        <h2 class="username" id="name1">-</h2>
+                        <ul class="stats-list">
+                            <li><span class="stat-name">Jogos</span><span class="stat-value" id="games1">0</span></li>
+                            <li><span class="stat-name">Horas Jogadas</span><span class="stat-value" id="hours1">0</span></li>
+                            <li><span class="stat-name">Conquistas</span><span class="stat-value" id="achievements1">0</span></li>
+                            <li><span class="stat-name">Platinas</span><span class="stat-value" id="platinums1">0</span></li>
+                            <li><span class="stat-name">Taxa de Conclusão</span><span class="stat-value" id="completion1">0%</span></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="profile-card" id="profile2Card">
+                    <div class="profile-card-inner">
+                        <span class="crown" id="crown2" style="display: none;"><i class="fas fa-crown"></i></span>
+                        <img src="" alt="Avatar" class="avatar" id="avatar2">
+                        <h2 class="username" id="name2">-</h2>
+                        <ul class="stats-list">
+                            <li><span class="stat-name">Jogos</span><span class="stat-value" id="games2">0</span></li>
+                            <li><span class="stat-name">Horas Jogadas</span><span class="stat-value" id="hours2">0</span></li>
+                            <li><span class="stat-name">Conquistas</span><span class="stat-value" id="achievements2">0</span></li>
+                            <li><span class="stat-name">Platinas</span><span class="stat-value" id="platinums2">0</span></li>
+                            <li><span class="stat-name">Taxa de Conclusão</span><span class="stat-value" id="completion2">0%</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-section">
+                <h3 class="section-title"><i class="fas fa-chart-radar"></i> Comparativo</h3>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="common-games">
+                <h3 class="section-title">
+                    <i class="fas fa-gamepad"></i> 
+                    Jogos em Comum (<span id="commonCount">0</span>)
+                </h3>
+                <table class="games-table">
+                    <thead>
+                        <tr>
+                            <th>Jogo</th>
+                            <th>Jogador 1</th>
+                            <th>Jogador 2</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commonGamesBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const STEAM_API_KEY = '8B07FE7C9405216BF61C1F439E93922B';
+        const PROXIES = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?'];
+        let radarChart = null;
+        
+        async function fetchWithProxy(url) {
+            for (const proxy of PROXIES) {
+                try {
+                    const res = await fetch(proxy + encodeURIComponent(url));
+                    if (res.ok) return await res.json();
+                } catch(e) { continue; }
+            }
+            // Tentar servidor local
+            try {
+                const res = await fetch(url.replace('http://api.steampowered.com', 'http://localhost:3000/api/steam'));
+                if (res.ok) return await res.json();
+            } catch(e) {}
+            throw new Error('Falha ao buscar dados');
+        }
+        
+        async function resolveVanityUrl(vanityName) {
+            const url = `http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${STEAM_API_KEY}&vanityurl=${vanityName}`;
+            const data = await fetchWithProxy(url);
+            if (data.response && data.response.success === 1) {
+                return data.response.steamid;
+            }
+            return null;
+        }
+        
+        async function extractSteamId(input) {
+            input = input.trim();
+            
+            // Já é um ID de 17 dígitos
+            if (/^\d{17}$/.test(input)) return input;
+            
+            // URL customizada
+            let match = input.match(/steamcommunity\.com\/id\/([^\/]+)/);
+            if (match) {
+                const resolved = await resolveVanityUrl(match[1]);
+                if (resolved) return resolved;
+            }
+            
+            // URL com profiles
+            match = input.match(/steamcommunity\.com\/profiles\/(\d{17})/);
+            if (match) return match[1];
+            
+            // Tentar como vanity name
+            const resolved = await resolveVanityUrl(input);
+            if (resolved) return resolved;
+            
+            return input;
+        }
+        
+        async function compareProfiles() {
+            const player1Input = document.getElementById('player1').value.trim();
+            const player2Input = document.getElementById('player2').value.trim();
+            
+            if (!player1Input || !player2Input) {
+                document.querySelector('.search-container').style.border = '2px solid #ff0055';
+                setTimeout(() => document.querySelector('.search-container').style.border = '', 2000);
+                return;
+            }
+            
+            document.getElementById('loader').classList.add('active');
+            document.getElementById('comparisonArea').style.display = 'none';
+            
+            // Limpar classes de melhor
+            document.querySelectorAll('.stat-value').forEach(el => el.classList.remove('better'));
+            
+            try {
+                // Resolver IDs
+                const [steamId1, steamId2] = await Promise.all([
+                    extractSteamId(player1Input),
+                    extractSteamId(player2Input)
+                ]);
+                
+                console.log('IDs resolvidos:', steamId1, steamId2);
+                
+                // Buscar dados dos dois jogadores
+                const [data1, data2] = await Promise.all([
+                    fetchPlayerData(steamId1),
+                    fetchPlayerData(steamId2)
+                ]);
+                
+                if (!data1.profile.personaname || !data2.profile.personaname) {
+                    throw new Error('Perfil não encontrado ou privado');
+                }
+                
+                displayComparison(data1, data2);
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                // Carregar demo como fallback
+                loadDemoComparison();
+            } finally {
+                document.getElementById('loader').classList.remove('active');
+            }
+        }
+        
+        async function fetchPlayerData(steamId) {
+            // Buscar perfil e jogos em paralelo
+            const [profileData, gamesData] = await Promise.all([
+                fetchWithProxy(`http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${steamId}`),
+                fetchWithProxy(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&include_appinfo=1&format=json`)
+            ]);
+            
+            const profile = profileData.response?.players?.[0] || {};
+            const games = gamesData.response?.games || [];
+            
+            // Para jogos, pegar os top 20 por tempo de jogo
+            const topGames = games.sort((a,b) => (b.playtime_forever || 0) - (a.playtime_forever || 0)).slice(0, 20);
+            
+            // Buscar conquistas em paralelo (muito mais rápido!)
+            const achievementPromises = topGames.map(async game => {
+                try {
+                    const achUrl = `http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${game.appid}&key=${STEAM_API_KEY}&steamid=${steamId}`;
+                    const achData = await fetchWithProxy(achUrl);
+                    if (achData.playerstats?.achievements) {
+                        const achievements = achData.playerstats.achievements;
+                        game.unlocked = achievements.filter(a => a.achieved).length;
+                        game.total = achievements.length;
+                        game.percent = game.total > 0 ? Math.round((game.unlocked / game.total) * 100) : 0;
+                    }
+                } catch(e) {
+                    game.unlocked = 0;
+                    game.percent = 0;
+                }
+                return game;
+            });
+            
+            await Promise.all(achievementPromises);
+            
+            return { 
+                profile, 
+                games: topGames.map(g => ({
+                    appid: g.appid,
+                    name: g.name,
+                    playtime_forever: g.playtime_forever || 0,
+                    unlocked: g.unlocked || 0,
+                    percent: g.percent || 0
+                }))
+            };
+        }
+        
+        function loadDemoComparison() {
+            const data1 = {
+                profile: { personaname: 'Player Alpha', avatarfull: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg' },
+                games: [
+                    { appid: 1245620, name: 'Elden Ring', playtime_forever: 12000, percent: 100, unlocked: 42 },
+                    { appid: 1091500, name: 'Cyberpunk 2077', playtime_forever: 8500, percent: 85, unlocked: 38 },
+                    { appid: 1174180, name: 'Red Dead Redemption 2', playtime_forever: 15000, percent: 72, unlocked: 31 },
+                    { appid: 1593500, name: 'God of War', playtime_forever: 3600, percent: 100, unlocked: 37 },
+                    { appid: 1145360, name: 'Hades', playtime_forever: 4800, percent: 95, unlocked: 48 }
+                ]
+            };
+            
+            const data2 = {
+                profile: { personaname: 'Player Beta', avatarfull: 'https://avatars.steamstatic.com/b5bd56c1aa4644a474a2e4972be27ef9e82e517e_full.jpg' },
+                games: [
+                    { appid: 1245620, name: 'Elden Ring', playtime_forever: 18000, percent: 100, unlocked: 42 },
+                    { appid: 1091500, name: 'Cyberpunk 2077', playtime_forever: 6000, percent: 65, unlocked: 28 },
+                    { appid: 292030, name: 'The Witcher 3', playtime_forever: 20000, percent: 100, unlocked: 78 },
+                    { appid: 1593500, name: 'God of War', playtime_forever: 4500, percent: 88, unlocked: 32 },
+                    { appid: 413150, name: 'Stardew Valley', playtime_forever: 9000, percent: 55, unlocked: 22 }
+                ]
+            };
+            
+            displayComparison(data1, data2);
+        }
+        
+        function displayComparison(data1, data2) {
+            document.getElementById('comparisonArea').style.display = 'block';
+            
+            // Avatars e nomes
+            document.getElementById('avatar1').src = data1.profile.avatarfull;
+            document.getElementById('name1').innerText = data1.profile.personaname;
+            document.getElementById('avatar2').src = data2.profile.avatarfull;
+            document.getElementById('name2').innerText = data2.profile.personaname;
+            
+            // Calcular stats
+            const stats1 = calculateStats(data1.games);
+            const stats2 = calculateStats(data2.games);
+            
+            // Exibir stats
+            displayStats(1, stats1, stats2);
+            displayStats(2, stats2, stats1);
+            
+            // Determinar vencedor
+            const score1 = stats1.platinums * 100 + stats1.achievements;
+            const score2 = stats2.platinums * 100 + stats2.achievements;
+            
+            document.getElementById('crown1').style.display = score1 > score2 ? 'block' : 'none';
+            document.getElementById('crown2').style.display = score2 > score1 ? 'block' : 'none';
+            document.getElementById('profile1Card').classList.toggle('winner', score1 > score2);
+            document.getElementById('profile2Card').classList.toggle('winner', score2 > score1);
+            
+            // Jogos em comum
+            displayCommonGames(data1.games, data2.games);
+            
+            // Gráfico radar
+            renderRadarChart(stats1, stats2, data1.profile.personaname, data2.profile.personaname);
+        }
+        
+        function calculateStats(games) {
+            const totalHours = Math.round(games.reduce((sum, g) => sum + (g.playtime_forever || 0), 0) / 60);
+            const totalAchievements = games.reduce((sum, g) => sum + (g.unlocked || 0), 0);
+            const platinums = games.filter(g => g.percent === 100).length;
+            const avgCompletion = games.length ? Math.round(games.reduce((sum, g) => sum + (g.percent || 0), 0) / games.length) : 0;
+            
+            return {
+                games: games.length,
+                hours: totalHours,
+                achievements: totalAchievements,
+                platinums,
+                completion: avgCompletion,
+                // Novas métricas para radar expandido
+                rareAchievements: games.filter(g => g.unlocked > 0 && g.percent >= 70).length, // Jogos quase platinados
+                efficiency: games.length > 0 ? Math.round((platinums / games.length) * 100) : 0, // Taxa de platina
+                dedication: Math.round(totalHours / Math.max(games.length, 1)), // Horas médias por jogo
+                diversity: new Set(games.map(g => g.appid)).size // Jogos únicos
+            };
+        }
+        
+        function displayStats(num, stats, otherStats) {
+            document.getElementById(`games${num}`).innerText = stats.games;
+            document.getElementById(`hours${num}`).innerText = stats.hours.toLocaleString();
+            document.getElementById(`achievements${num}`).innerText = stats.achievements.toLocaleString();
+            document.getElementById(`platinums${num}`).innerText = stats.platinums;
+            document.getElementById(`completion${num}`).innerText = stats.completion + '%';
+            
+            // Destacar melhores valores
+            if (stats.games > otherStats.games) document.getElementById(`games${num}`).classList.add('better');
+            if (stats.hours > otherStats.hours) document.getElementById(`hours${num}`).classList.add('better');
+            if (stats.achievements > otherStats.achievements) document.getElementById(`achievements${num}`).classList.add('better');
+            if (stats.platinums > otherStats.platinums) document.getElementById(`platinums${num}`).classList.add('better');
+            if (stats.completion > otherStats.completion) document.getElementById(`completion${num}`).classList.add('better');
+        }
+        
+        function displayCommonGames(games1, games2) {
+            const gamesMap1 = new Map(games1.map(g => [g.appid, g]));
+            const commonGames = games2.filter(g => gamesMap1.has(g.appid)).map(g => ({
+                ...g,
+                player1: gamesMap1.get(g.appid),
+                player2: g
+            }));
+            
+            document.getElementById('commonCount').innerText = commonGames.length;
+            
+            const tbody = document.getElementById('commonGamesBody');
+            tbody.innerHTML = '';
+            
+            commonGames.slice(0, 10).forEach(game => {
+                const p1 = game.player1.percent || 0;
+                const p2 = game.player2.percent || 0;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <div class="game-row">
+                                <img src="https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.appid}.jpg" 
+                                     class="game-icon" onerror="this.style.display='none'">
+                                <span class="game-name">${game.name}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress-cell">
+                                <div class="mini-progress">
+                                    <div class="mini-fill cyan" style="width: ${p1}%"></div>
+                                </div>
+                                <span class="percent-text">${p1}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress-cell">
+                                <div class="mini-progress">
+                                    <div class="mini-fill purple" style="width: ${p2}%"></div>
+                                </div>
+                                <span class="percent-text">${p2}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        function renderRadarChart(stats1, stats2, name1, name2) {
+            const ctx = document.getElementById('radarChart');
+            
+            if (radarChart) radarChart.destroy();
+            
+            // Normalizar valores para escala 0-100
+            const maxGames = Math.max(stats1.games, stats2.games, 1);
+            const maxHours = Math.max(stats1.hours, stats2.hours, 1);
+            const maxAchievements = Math.max(stats1.achievements, stats2.achievements, 1);
+            const maxPlatinums = Math.max(stats1.platinums, stats2.platinums, 1);
+            const maxRare = Math.max(stats1.rareAchievements, stats2.rareAchievements, 1);
+            const maxDedication = Math.max(stats1.dedication, stats2.dedication, 1);
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['🎮 Biblioteca', '⏱️ Tempo', '⭐ Conquistas', '🏆 Platinas', '📈 Conclusão', '🔥 Platinando', '💪 Dedicação', '🎯 Eficiência'],
+                    datasets: [
+                        {
+                            label: name1,
+                            data: [
+                                (stats1.games / maxGames) * 100,
+                                (stats1.hours / maxHours) * 100,
+                                (stats1.achievements / maxAchievements) * 100,
+                                (stats1.platinums / maxPlatinums) * 100,
+                                stats1.completion,
+                                (stats1.rareAchievements / maxRare) * 100,
+                                (stats1.dedication / maxDedication) * 100,
+                                stats1.efficiency
+                            ],
+                            backgroundColor: 'rgba(0, 243, 255, 0.2)',
+                            borderColor: '#00f3ff',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#00f3ff',
+                            pointBorderColor: '#fff',
+                            pointRadius: 4
+                        },
+                        {
+                            label: name2,
+                            data: [
+                                (stats2.games / maxGames) * 100,
+                                (stats2.hours / maxHours) * 100,
+                                (stats2.achievements / maxAchievements) * 100,
+                                (stats2.platinums / maxPlatinums) * 100,
+                                stats2.completion,
+                                (stats2.rareAchievements / maxRare) * 100,
+                                (stats2.dedication / maxDedication) * 100,
+                                stats2.efficiency
+                            ],
+                            backgroundColor: 'rgba(188, 19, 254, 0.2)',
+                            borderColor: '#bc13fe',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#bc13fe',
+                            pointBorderColor: '#fff',
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 100,
+                            ticks: { display: false, stepSize: 20 },
+                            grid: { color: 'rgba(255,255,255,0.15)', circular: true },
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { 
+                                color: '#e0e6ed', 
+                                font: { size: 11, weight: 'bold' },
+                                padding: 10
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#e0e6ed', font: { size: 12 }, padding: 15 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(16, 26, 46, 0.95)',
+                            titleColor: '#00f3ff',
+                            bodyColor: '#e0e6ed',
+                            borderColor: '#00f3ff',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function(ctx) {
+                                    return `${ctx.dataset.label}: ${Math.round(ctx.raw)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Carregar tema do localStorage
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+            document.body.classList.remove('theme-rgb', 'theme-retro', 'theme-light', 'theme-dark', 'theme-matrix', 'theme-fire');
+            if (savedTheme !== 'default') {
+                document.body.classList.add(`theme-${savedTheme}`);
+            }
+        }
+        
+        // Verificar params URL
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('p1') && params.get('p2')) {
+                document.getElementById('player1').value = params.get('p1');
+                document.getElementById('player2').value = params.get('p2');
+                compareProfiles();
+            }
+            
+            // Adicionar Enter key listeners
+            document.getElementById('player1').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') compareProfiles();
+            });
+            document.getElementById('player2').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') compareProfiles();
+            });
+        });
+    </script>
+</body>
+</html>

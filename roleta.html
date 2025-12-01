@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roleta do Backlog - Steam Explorer</title>
+    <title>Roleta do Backlog - SteamTrack</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link id="favicon" rel="icon" href="https://store.steampowered.com/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="languages.js"></script>
 
     <style>
         /* CSS BASE (Compartilhado) */
@@ -21,16 +23,48 @@
             --font-display: 'Orbitron', sans-serif;
             --font-body: 'Rajdhani', sans-serif;
         }
+        
+        /* TEMAS */
+        body.theme-matrix { --primary-color: #00ff41; --secondary-color: #008f11; --bg-dark: #000000; --bg-panel: rgba(0, 20, 0, 0.95); }
+        body.theme-fire { --primary-color: #ffbd2e; --secondary-color: #ff0055; --bg-dark: #1a0505; --bg-panel: rgba(40, 10, 10, 0.95); }
+        body.theme-retro { --primary-color: #fca311; --secondary-color: #14213d; --bg-dark: #101010; --bg-panel: #1a1a1a; --glass-border: #404040; --text-main: #e5e5e5; --text-dim: #a0a0a0; --font-display: 'Press Start 2P', cursive; }
+        body.theme-light { --primary-color: #007bff; --secondary-color: #6c757d; --bg-dark: #f8f9fa; --bg-panel: #ffffff; --glass-border: #dee2e6; --text-main: #212529; --text-dim: #6c757d; }
+        body.theme-dark { --primary-color: #e83e8c; --secondary-color: #6f42c1; --bg-dark: #000000; --bg-panel: rgba(20, 20, 20, 0.95); --glass-border: rgba(255,255,255,0.15); --text-main: #f8f9fa; --text-dim: #adb5bd; }
+        
+        @keyframes rgb-color-cycle {
+            0% { --primary-color: #ff00de; --secondary-color: #deff00; }
+            25% { --primary-color: #00ffde; --secondary-color: #de00ff; }
+            50% { --primary-color: #de00ff; --secondary-color: #00deff; }
+            75% { --primary-color: #ffde00; --secondary-color: #00ffde; }
+            100% { --primary-color: #ff00de; --secondary-color: #deff00; }
+        }
+        body.theme-rgb { animation: rgb-color-cycle 8s linear infinite; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: var(--bg-dark); color: var(--text-main); font-family: var(--font-body); min-height: 100vh; }
         .container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px; }
 
         /* HEADER */
         .main-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); }
+        /* Header XP (compact) */
+        .header-xp-container { display:flex; align-items:center; gap:10px; background: rgba(0,0,0,0.35); padding:5px 10px; border-radius:20px; border:1px solid rgba(255,255,255,0.04); }
+        .header-lvl-badge { background: var(--primary-color); color: #000; font-weight: bold; padding: 2px 6px; border-radius: 5px; font-size: 12px; }
+        .header-xp-bar { width: 120px; height: 8px; background: #222; border-radius: 6px; overflow: hidden; }
+        .header-xp-fill { height: 100%; background: var(--primary-color); width: 0%; transition: width 0.4s ease; }
+        .header-xp-text { font-size: 11px; color: var(--text-dim); }
         .site-title { font-family: var(--font-display); font-size: 24px; background: linear-gradient(90deg, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .main-nav { display: flex; gap: 10px; }
-        .nav-btn { background: transparent; border: 1px solid transparent; color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: var(--font-display); text-decoration: none; font-size: 12px; transition: 0.3s; }
+        .main-nav { display: flex; gap: 10px; align-items: center; }
+        .nav-btn { background: transparent; border: 1px solid transparent; color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: var(--font-display); text-decoration: none; font-size: 11px; transition: 0.3s; }
         .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: var(--primary-color); border-color: var(--glass-border); }
+        .nav-btn.primary { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: #000; font-weight: bold; padding: 8px 20px; border: none; }
+        .nav-btn.primary:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--primary-color); }
+        .nav-menu-container { position: relative; }
+        .nav-menu-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-main); padding: 8px 15px; border-radius: 15px; cursor: pointer; font-family: var(--font-display); font-size: 11px; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .nav-menu-btn:hover { background: rgba(255,255,255,0.15); color: var(--primary-color); }
+        .nav-menu-dropdown { position: absolute; top: 100%; right: 0; margin-top: 10px; background: var(--bg-panel); border: 1px solid var(--glass-border); border-radius: 12px; min-width: 180px; padding: 10px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s ease; z-index: 1000; }
+        .nav-menu-container:hover .nav-menu-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .nav-menu-dropdown a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-main); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .nav-menu-dropdown a:hover { background: rgba(255,0,85,0.1); color: var(--primary-color); }
+        .nav-menu-dropdown a i { width: 20px; text-align: center; color: var(--primary-color); }
 
         /* ROLETA STYLES */
         .roulette-wrapper {
@@ -54,9 +88,14 @@
         .game-display {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
+            background-repeat: no-repeat;
             display: flex; flex-direction: column; justify-content: flex-end;
             align-items: center; padding-bottom: 40px;
-            opacity: 0; transition: opacity 0.1s; /* Rápido para o giro */
+            opacity: 0; transition: opacity 0.1s;
+        }
+        .game-display::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.5) 100%);
         }
         .game-display.active { opacity: 1; }
         
@@ -92,40 +131,65 @@
         <header class="main-header">
             <div class="logo-area">
                 <i class="fab fa-steam fa-2x" style="color:var(--primary-color)"></i>
-                <span class="site-title">ROLETA</span>
+                <span class="site-title" data-i18n-key="nav_roulette">ROLETA</span>
+            </div>
+            <div class="header-xp-container" id="headerXpContainer" style="display:none;">
+                <span class="header-lvl-badge" id="hLvl">1</span>
+                <div class="header-xp-bar"><div class="header-xp-fill" id="hBar"></div></div>
+                <span class="header-xp-text" id="hText">0 XP</span>
             </div>
             <nav class="main-nav">
-                <a href="index.html" class="nav-btn">HOME</a>
-                <a href="#" class="nav-btn active">ROLETA</a>
-                <a href="hall.html" class="nav-btn">HALL DA FAMA</a>
+                <a href="roleta.html" class="nav-btn primary active"><i class="fas fa-dice"></i> <span data-i18n-key="nav_roulette">ROLETA</span></a>
+                <div class="nav-menu-container">
+                    <button class="nav-menu-btn"><i class="fas fa-bars"></i> <span data-i18n-key="menu">MENU</span> <i class="fas fa-chevron-down" style="font-size:8px;"></i></button>
+                    <div class="nav-menu-dropdown">
+                        <a href="index.html"><i class="fas fa-gamepad"></i> <span data-i18n-key="nav_library">Biblioteca</span></a>
+                        <a href="hall.html"><i class="fas fa-trophy"></i> <span data-i18n-key="hallOfFame">Hall da Fama</span></a>
+                        <a href="level.html"><i class="fas fa-star"></i> <span data-i18n-key="nav_xp">Level / XP</span></a>
+                        <a href="prices.html"><i class="fas fa-chart-line"></i> <span data-i18n-key="priceHistory">Histórico Preços</span></a>
+                        <a href="compare.html"><i class="fas fa-users"></i> <span data-i18n-key="compareProfiles">Comparar Perfis</span></a>
+                        <a href="museum.html"><i class="fas fa-landmark"></i> Museu 3D</a>
+                        <a href="wallpaper.html"><i class="fas fa-image"></i> <span data-i18n-key="nav_wallpaper">Wallpapers</span></a>
+                    </div>
+                </div>
             </nav>
+            <select id="langSelector" onchange="setLanguage(this.value)" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 6px 10px; border-radius: 15px; cursor: pointer; font-size: 12px;">
+                <option value="pt">🇧🇷 PT</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="es">🇪🇸 ES</option>
+                <option value="fr">🇫🇷 FR</option>
+                <option value="de">🇩🇪 DE</option>
+                <option value="ru">🇷🇺 RU</option>
+                <option value="ja">🇯🇵 JA</option>
+                <option value="zh">🇨🇳 ZH</option>
+            </select>
         </header>
 
         <div class="roulette-wrapper">
             <div class="filter-options">
-                <button class="filter-opt active" onclick="setMode('backlog', this)">Backlog ( &lt; 2h )</button>
-                <button class="filter-opt" onclick="setMode('unplayed', this)">Nunca Joguei ( 0h )</button>
-                <button class="filter-opt" onclick="setMode('all', this)">Qualquer Um</button>
+                <button class="filter-opt active" onclick="setMode('backlog', this)" data-i18n-key="backlog">Backlog ( &lt; 2h jogadas )</button>
+                <button class="filter-opt" onclick="setMode('unplayed', this)" data-i18n-key="neverPlayed">Nunca Joguei ( 0 min )</button>
+                <button class="filter-opt" onclick="setMode('all', this)" data-i18n-key="anyGame">Qualquer Um</button>
             </div>
 
             <div class="slot-machine" id="slotMachine">
                 <div class="slot-window">
                     <!-- Imagem de fundo dinâmica -->
-                    <div id="currentDisplay" class="game-display active" style="background-image: url('https://store.steampowered.com/public/shared/images/header/globalheader_logo.png?t=962016');">
-                        <div class="game-info-box">
-                            <div class="game-title-big" id="resultTitle">O QUE JOGAR?</div>
-                            <div class="game-meta" id="resultMeta">Gire para descobrir</div>
+                    <div id="currentDisplay" class="game-display active" style="background: linear-gradient(135deg, #111 0%, #222 100%);">
+                        <div class="game-info-box" style="opacity:1; transform:none;">
+                            <div class="game-title-big" id="resultTitle"><i class="fas fa-dice" style="margin-right:15px;"></i> <span data-i18n-key="roulette_whatToPlay">O QUE JOGAR?</span></div>
+                            <div class="game-meta" id="resultMeta" data-i18n-key="roulette_spinToDiscover">Gire para descobrir seu próximo jogo</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="controls">
-                <button class="spin-btn" id="spinBtn" onclick="spin()">GIRAR!</button>
+                <button class="spin-btn" id="spinBtn" onclick="spin()" data-i18n-key="roulette_spin">GIRAR!</button>
             </div>
             
             <div style="margin-top:20px;">
-                <a href="#" id="steamLink" target="_blank" class="nav-btn" style="display:none; border:1px solid #fff; color:#fff;">ABRIR NA LOJA</a>
+                <a href="#" id="steamLink" target="_blank" class="nav-btn" style="display:none; border:1px solid #fff; color:#fff;" data-i18n-key="roulette_openStore">ABRIR NA LOJA</a>
             </div>
         </div>
     </div>
@@ -140,10 +204,18 @@
         let isSpinning = false;
 
         window.onload = async () => {
+            // Aplicar idioma salvo
+            const savedLang = localStorage.getItem('preferredLanguage');
+            if (savedLang && typeof setLanguage === 'function') {
+                setLanguage(savedLang);
+            } else if (typeof translatePage === 'function') {
+                translatePage();
+            }
+            
             const steamId = localStorage.getItem('lastSteamId');
             if(!steamId) {
-                document.getElementById('resultTitle').innerText = "ID NÃO ENCONTRADO";
-                document.getElementById('resultMeta').innerText = "Volte para a Home e busque um perfil.";
+                document.getElementById('resultTitle').innerText = typeof t === 'function' ? t('roulette_idNotFound') || "ID NÃO ENCONTRADO" : "ID NÃO ENCONTRADO";
+                document.getElementById('resultMeta').innerText = typeof t === 'function' ? t('roulette_goBack') || "Volte para a Home e busque um perfil." : "Volte para a Home e busque um perfil.";
                 return;
             }
 
@@ -163,14 +235,17 @@
                 if(data && data.response && data.response.games) {
                     allGames = data.response.games;
                     applyFilter();
-                    document.getElementById('resultMeta').innerText = `Pronto! ${filteredGames.length} jogos no pool.`;
+                    document.getElementById('resultMeta').innerText = `${typeof t === 'function' ? t('roulette_ready') || 'Pronto!' : 'Pronto!'} ${filteredGames.length} ${typeof t === 'function' ? t('roulette_gamesInPool') || 'jogos no pool.' : 'jogos no pool.'}`;
                 }
             } catch(e) {
-                alert("Erro ao carregar jogos.");
+                document.getElementById('resultMeta').innerText = typeof t === 'function' ? t('roulette_loadError') || 'Erro ao carregar jogos.' : 'Erro ao carregar jogos.';
             }
         };
 
         function setMode(mode, btn) {
+            // Não permitir trocar filtro enquanto está girando
+            if (isSpinning) return;
+            
             currentMode = mode;
             document.querySelectorAll('.filter-opt').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -180,15 +255,17 @@
 
         function applyFilter() {
             if(currentMode === 'backlog') {
-                filteredGames = allGames.filter(g => g.playtime_forever < 120 && g.playtime_forever > 0); // Menos de 2h
+                // Backlog: jogos com menos de 2 horas (120 minutos) E mais de 0 minutos
+                filteredGames = allGames.filter(g => g.playtime_forever > 0 && g.playtime_forever < 120);
             } else if (currentMode === 'unplayed') {
+                // Nunca joguei: EXATAMENTE 0 minutos jogados
                 filteredGames = allGames.filter(g => g.playtime_forever === 0);
             } else {
                 filteredGames = allGames;
             }
             
             if(filteredGames.length === 0) {
-                alert("Nenhum jogo encontrado neste filtro! Mudando para 'Todos'.");
+                document.getElementById('resultMeta').innerText = "Nenhum jogo neste filtro! Usando 'Todos'.";
                 currentMode = 'all';
                 filteredGames = allGames;
             }
@@ -197,6 +274,9 @@
         function spin() {
             if(isSpinning || filteredGames.length === 0) return;
             isSpinning = true;
+            
+            // Desabilitar botões de filtro
+            document.querySelectorAll('.filter-opt').forEach(b => b.disabled = true);
             
             const display = document.getElementById('currentDisplay');
             const title = document.getElementById('resultTitle');
@@ -221,7 +301,7 @@
                 const imgUrl = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.appid}/header.jpg`;
                 display.style.backgroundImage = `url('${imgUrl}')`;
                 title.innerText = game.name;
-                meta.innerText = (game.playtime_forever / 60).toFixed(1) + " horas jogadas";
+                meta.innerText = (game.playtime_forever / 60).toFixed(1) + " " + (typeof t === 'function' ? t('hoursPlayed') || 'horas jogadas' : 'horas jogadas');
                 
                 iterations++;
                 
@@ -233,8 +313,11 @@
                     // FIM
                     isSpinning = false;
                     btn.disabled = false;
-                    btn.innerText = "GIRAR DE NOVO";
+                    btn.innerText = typeof t === 'function' ? t('roulette_spinAgain') || 'GIRAR DE NOVO' : 'GIRAR DE NOVO';
                     document.querySelector('.slot-machine').classList.add('show-result');
+                    
+                    // Reabilitar botões de filtro
+                    document.querySelectorAll('.filter-opt').forEach(b => b.disabled = false);
                     
                     link.href = `https://store.steampowered.com/app/${game.appid}`;
                     link.style.display = 'inline-block';
@@ -243,6 +326,47 @@
             
             loop();
         }
+    </script>
+    <script src="shared-features.js"></script>
+    <script>
+        function showHeaderXpFromLocalStorage() {
+            try {
+                const s = localStorage.getItem('userStats'); if(!s) return;
+                const stats = JSON.parse(s);
+                const totalXP = (stats.totalAchievementsUnlocked || 0) * 10 + (stats.totalPlatinum || 0) * 1000 + (stats.gamesCounted || 0) * 50;
+                const level = Math.floor(Math.sqrt(totalXP / 100)) || 1;
+                const xpForCurrent = 100 * (level * level);
+                const xpForNext = 100 * ((level + 1) * (level + 1));
+                const xpInLevel = totalXP - xpForCurrent; const xpNeeded = xpForNext - xpForCurrent;
+                const percent = xpNeeded > 0 ? Math.max(0, Math.min(100, Math.floor((xpInLevel / xpNeeded) * 100))) : 0;
+                const el = document.getElementById('headerXpContainer'); if(!el) return;
+                document.getElementById('hLvl').innerText = level;
+                document.getElementById('hBar').style.width = percent + '%';
+                document.getElementById('hText').innerText = totalXP.toLocaleString() + ' XP';
+                el.style.display = 'flex';
+            } catch(e) { console.warn('Erro ao mostrar header XP', e); }
+        }
+        
+        // Carregar tema do localStorage
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+            document.body.classList.remove('theme-rgb', 'theme-retro', 'theme-light', 'theme-dark', 'theme-matrix', 'theme-fire');
+            if (savedTheme !== 'default') {
+                document.body.classList.add(`theme-${savedTheme}`);
+            }
+            // Temas sazonais
+            const seasonalEnabled = localStorage.getItem('seasonalEnabled') === 'true';
+            if (seasonalEnabled) {
+                const month = new Date().getMonth();
+                if (month === 11 || month === 0) document.body.classList.add('theme-seasonal-christmas');
+                else if (month === 9) document.body.classList.add('theme-seasonal-halloween');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            showHeaderXpFromLocalStorage();
+        });
     </script>
 </body>
 </html>

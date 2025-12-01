@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Wallpapers - SteamTrack</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="languages.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #00f3ff;
+            --secondary-color: #bc13fe;
+            --bg-dark: #050b14;
+            --bg-panel: rgba(16, 26, 46, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #e0e6ed;
+            --text-dim: #94a3b8;
+            --success: #00ff9d;
+            --gold: #ffd700;
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+        }
+        
+        /* TEMAS */
+        body.theme-matrix { --primary-color: #00ff41; --secondary-color: #008f11; --bg-dark: #000000; --bg-panel: rgba(0, 20, 0, 0.95); }
+        body.theme-fire { --primary-color: #ffbd2e; --secondary-color: #ff0055; --bg-dark: #1a0505; --bg-panel: rgba(40, 10, 10, 0.95); }
+        body.theme-retro { --primary-color: #fca311; --secondary-color: #14213d; --bg-dark: #101010; --bg-panel: #1a1a1a; --glass-border: #404040; --text-main: #e5e5e5; --text-dim: #a0a0a0; --font-display: 'Press Start 2P', cursive; }
+        body.theme-light { --primary-color: #007bff; --secondary-color: #6c757d; --bg-dark: #f8f9fa; --bg-panel: #ffffff; --glass-border: #dee2e6; --text-main: #212529; --text-dim: #6c757d; }
+        body.theme-dark { --primary-color: #e83e8c; --secondary-color: #6f42c1; --bg-dark: #000000; --bg-panel: rgba(20, 20, 20, 0.95); --glass-border: rgba(255,255,255,0.15); --text-main: #f8f9fa; --text-dim: #adb5bd; }
+        
+        @keyframes rgb-color-cycle {
+            0% { --primary-color: #ff00de; --secondary-color: #deff00; }
+            25% { --primary-color: #00ffde; --secondary-color: #de00ff; }
+            50% { --primary-color: #de00ff; --secondary-color: #00deff; }
+            75% { --primary-color: #ffde00; --secondary-color: #00ffde; }
+            100% { --primary-color: #ff00de; --secondary-color: #deff00; }
+        }
+        body.theme-rgb { animation: rgb-color-cycle 8s linear infinite; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: var(--font-body); 
+            background: var(--bg-dark); 
+            color: var(--text-main); 
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050b14 0%, #0a1628 50%, #050b14 100%);
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid rgba(0,243,255,0.2);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { font-family: var(--font-display); font-size: 20px; color: var(--primary-color); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .main-nav { display: flex; gap: 10px; align-items: center; }
+        .nav-btn { background: transparent; border: 1px solid transparent; color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: var(--font-display); text-decoration: none; font-size: 11px; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: var(--primary-color); }
+        .nav-btn.primary { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: #000; font-weight: bold; padding: 8px 20px; border: none; }
+        .nav-btn.primary:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--primary-color); }
+        .nav-menu-container { position: relative; }
+        .nav-menu-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(0,243,255,0.2); color: var(--text-main); padding: 8px 15px; border-radius: 15px; cursor: pointer; font-family: var(--font-display); font-size: 11px; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .nav-menu-btn:hover { background: rgba(255,255,255,0.15); color: var(--primary-color); }
+        .nav-menu-dropdown { position: absolute; top: 100%; right: 0; margin-top: 10px; background: var(--bg-panel); border: 1px solid rgba(0,243,255,0.2); border-radius: 12px; min-width: 180px; padding: 10px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s ease; z-index: 1000; }
+        .nav-menu-container:hover .nav-menu-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .nav-menu-dropdown a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-main); text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .nav-menu-dropdown a:hover { background: rgba(0,243,255,0.1); color: var(--primary-color); }
+        .nav-menu-dropdown a i { width: 20px; text-align: center; color: var(--primary-color); }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .sidebar {
+            background: var(--bg-panel);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-color);
+        }
+        
+        .option-group { margin-bottom: 25px; }
+        .option-label { 
+            display: block; 
+            margin-bottom: 8px; 
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+        
+        .option-select, .option-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+            color: var(--text-main);
+            font-size: 14px;
+        }
+        
+        .option-select:focus, .option-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .template-btn {
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .template-btn:hover { border-color: var(--primary-color); }
+        .template-btn.active { border-color: var(--primary-color); background: rgba(0,243,255,0.1); }
+        
+        .template-btn.gradient1 { background: linear-gradient(135deg, #00f3ff, #bc13fe); }
+        .template-btn.gradient2 { background: linear-gradient(135deg, #ff0055, #ffd700); }
+        .template-btn.gradient3 { background: linear-gradient(135deg, #00ff9d, #00f3ff); }
+        .template-btn.dark { background: #0a0a0a; }
+        .template-btn.minimal { background: #1a1a2e; }
+        .template-btn.neon { background: linear-gradient(135deg, #0a0a0a, #1a0a2e); border-color: #00f3ff; }
+        
+        .color-picker-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            padding: 0;
+        }
+        
+        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker::-webkit-color-swatch { border: none; border-radius: 6px; }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item input { display: none; }
+        
+        .checkbox-box {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .checkbox-item input:checked + .checkbox-box {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .checkbox-box i { color: black; font-size: 12px; display: none; }
+        .checkbox-item input:checked + .checkbox-box i { display: block; }
+        
+        .opacity-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.1);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .opacity-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .generate-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,243,255,0.3); }
+        
+        .preview-area {
+            background: var(--bg-panel);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .resolution-tabs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .resolution-tab {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .resolution-tab:hover, .resolution-tab.active {
+            background: var(--primary-color);
+            color: black;
+            border-color: var(--primary-color);
+        }
+        
+        .preview-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        #wallpaperCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .download-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .download-btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .download-btn:hover { 
+            background: var(--success);
+            color: black;
+        }
+        
+        .game-selector {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .game-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .game-option:hover { background: rgba(0,243,255,0.1); }
+        .game-option.selected { background: rgba(0,243,255,0.2); }
+        
+        .game-option img {
+            width: 60px;
+            height: 30px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        
+        .game-option span {
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo"><i class="fab fa-steam"></i> STEAMTRACK</a>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="langSelector" onchange="setLanguage(this.value)" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 6px 10px; border-radius: 15px; cursor: pointer; font-size: 12px;">
+                <option value="pt">🇧🇷 PT</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="es">🇪🇸 ES</option>
+                <option value="fr">🇫🇷 FR</option>
+                <option value="de">🇩🇪 DE</option>
+                <option value="ru">🇷🇺 RU</option>
+                <option value="ja">🇯🇵 JA</option>
+                <option value="zh">🇨🇳 ZH</option>
+            </select>
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> <span data-i18n-key="back">Voltar</span></a>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar">
+                <h3 class="section-title"><i class="fas fa-palette"></i> TEMPLATE</h3>
+                <div class="template-grid">
+                    <div class="template-btn gradient1 active" onclick="setTemplate('gradient1')" title="Cyber"></div>
+                    <div class="template-btn gradient2" onclick="setTemplate('gradient2')" title="Fire"></div>
+                    <div class="template-btn gradient3" onclick="setTemplate('gradient3')" title="Matrix"></div>
+                    <div class="template-btn dark" onclick="setTemplate('dark')" title="Dark"></div>
+                    <div class="template-btn minimal" onclick="setTemplate('minimal')" title="Minimal"></div>
+                    <div class="template-btn neon" onclick="setTemplate('neon')" title="Neon"></div>
+                </div>
+                
+                <div class="option-group">
+                    <label class="option-label" data-i18n-key="selectStyle">Cores Personalizadas</label>
+                    <div class="color-picker-row">
+                        <input type="color" class="color-picker" id="color1" value="#00f3ff" onchange="updatePreview()">
+                        <input type="color" class="color-picker" id="color2" value="#bc13fe" onchange="updatePreview()">
+                        <input type="color" class="color-picker" id="bgColor" value="#050b14" onchange="updatePreview()">
+                    </div>
+                </div>
+                
+                <h3 class="section-title"><i class="fas fa-gamepad"></i> <span data-i18n-key="selectGame">JOGO</span></h3>
+                <div class="option-group">
+                    <input type="text" class="option-input" id="gameSearch" data-i18n-placeholder="filterGame" placeholder="Buscar jogo..." oninput="filterGames()">
+                    <div class="game-selector" id="gameSelector"></div>
+                </div>
+                
+                <h3 class="section-title"><i class="fas fa-sliders-h"></i> ELEMENTOS</h3>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="showAvatar" checked onchange="updatePreview()">
+                        <span class="checkbox-box"><i class="fas fa-check"></i></span>
+                        <span>Avatar</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="showUsername" checked onchange="updatePreview()">
+                        <span class="checkbox-box"><i class="fas fa-check"></i></span>
+                        <span data-i18n-key="profile">Nome de usuário</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="showStats" checked onchange="updatePreview()">
+                        <span class="checkbox-box"><i class="fas fa-check"></i></span>
+                        <span data-i18n-key="stats_achievements">Estatísticas</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="showGame" onchange="toggleOpacitySlider(); updatePreview()">
+                        <span class="checkbox-box"><i class="fas fa-check"></i></span>
+                        <span data-i18n-key="selectGame">Arte do jogo</span>
+                    </label>
+                    <div class="opacity-slider-container" id="gameOpacityContainer" style="display: none; margin-left: 28px; margin-top: 5px;">
+                        <label class="option-label" style="font-size: 11px; margin-bottom: 3px;">Opacidade da arte: <span id="opacityValue">85%</span></label>
+                        <input type="range" id="gameOpacity" min="30" max="100" value="85" class="opacity-slider" oninput="updateOpacityValue(); updatePreview()">
+                    </div>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="showLogo" checked onchange="updatePreview()">
+                        <span class="checkbox-box"><i class="fas fa-check"></i></span>
+                        <span>Logo SteamTrack</span>
+                    </label>
+                </div>
+                
+                <div class="option-group">
+                    <label class="option-label">Texto personalizado</label>
+                    <input type="text" class="option-input" id="customText" placeholder="Ex: Achievement Hunter" oninput="updatePreview()">
+                </div>
+                
+                <button class="generate-btn" onclick="generateWallpaper()">
+                    <i class="fas fa-magic"></i> <span data-i18n-key="generate">Gerar Wallpaper</span>
+                </button>
+            </div>
+            
+            <div class="preview-area">
+                <div class="preview-header">
+                    <h3 class="section-title"><i class="fas fa-eye"></i> PREVIEW</h3>
+                    <div class="resolution-tabs">
+                        <button class="resolution-tab active" onclick="setResolution(1920, 1080)">1080p</button>
+                        <button class="resolution-tab" onclick="setResolution(2560, 1440)">1440p</button>
+                        <button class="resolution-tab" onclick="setResolution(3840, 2160)">4K</button>
+                        <button class="resolution-tab" onclick="setResolution(1080, 1920)">Mobile</button>
+                    </div>
+                </div>
+                
+                <div class="preview-container">
+                    <canvas id="wallpaperCanvas"></canvas>
+                </div>
+                
+                <div class="download-options">
+                    <button class="download-btn" onclick="downloadWallpaper('png')">
+                        <i class="fas fa-download"></i> PNG
+                    </button>
+                    <button class="download-btn" onclick="downloadWallpaper('jpg')">
+                        <i class="fas fa-download"></i> JPG
+                    </button>
+                    <button class="download-btn" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configurações
+        let currentTemplate = 'gradient1';
+        let currentResolution = { width: 1920, height: 1080 };
+        let selectedGame = null;
+        
+        // Dados - tentar carregar do localStorage primeiro
+        let userProfile = {
+            username: 'PlayerDemo',
+            avatar: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
+            platinums: 25,
+            achievements: 1847,
+            games: 156
+        };
+        
+        let gamesList = [];
+        
+        // Carregar dados do usuário do localStorage
+        function loadUserData() {
+            try {
+                // Tentar carregar perfil
+                const savedProfile = localStorage.getItem('currentProfile');
+                if (savedProfile) {
+                    const profile = JSON.parse(savedProfile);
+                    userProfile.username = profile.personaname || userProfile.username;
+                    userProfile.avatar = profile.avatarfull || userProfile.avatar;
+                    console.log('✅ Perfil carregado:', userProfile.username);
+                }
+                
+                // Tentar carregar estatísticas (chave correta: userStats)
+                const savedStats = localStorage.getItem('userStats');
+                if (savedStats) {
+                    const stats = JSON.parse(savedStats);
+                    userProfile.platinums = stats.totalPlatinum || userProfile.platinums;
+                    userProfile.achievements = stats.totalAchievementsUnlocked || userProfile.achievements;
+                    userProfile.games = stats.gamesCounted || userProfile.games;
+                    console.log('✅ Stats carregados:', userProfile.platinums, 'platinas');
+                }
+                
+                // Tentar carregar jogos
+                const savedGames = localStorage.getItem('currentGames');
+                if (savedGames) {
+                    const games = JSON.parse(savedGames);
+                    gamesList = games.map(g => ({
+                        appid: g.appid,
+                        name: g.name
+                    })).slice(0, 50); // Limitar a 50 jogos
+                    userProfile.games = games.length; // Total de jogos real
+                    console.log('✅ Jogos carregados:', gamesList.length);
+                }
+                
+                // Fallback para jogos demo se não houver dados
+                if (gamesList.length === 0) {
+                    gamesList = [
+                        { appid: 1245620, name: 'Elden Ring' },
+                        { appid: 1593500, name: 'God of War' },
+                        { appid: 1091500, name: 'Cyberpunk 2077' },
+                        { appid: 1174180, name: 'Red Dead Redemption 2' },
+                        { appid: 1145360, name: 'Hades' },
+                        { appid: 367520, name: 'Hollow Knight' },
+                        { appid: 292030, name: 'The Witcher 3' },
+                        { appid: 814380, name: 'Sekiro' }
+                    ];
+                }
+            } catch (e) {
+                console.error('Erro ao carregar dados:', e);
+            }
+        }
+        
+        const templates = {
+            gradient1: { color1: '#00f3ff', color2: '#bc13fe', bg: '#050b14' },
+            gradient2: { color1: '#ff0055', color2: '#ffd700', bg: '#0a0505' },
+            gradient3: { color1: '#00ff9d', color2: '#00f3ff', bg: '#050a08' },
+            dark: { color1: '#333333', color2: '#666666', bg: '#0a0a0a' },
+            minimal: { color1: '#ffffff', color2: '#cccccc', bg: '#1a1a2e' },
+            neon: { color1: '#00f3ff', color2: '#ff00ff', bg: '#0a0a15' }
+        };
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadUserData();
+            renderGameSelector();
+            initCanvas();
+            
+            // Pré-carregar avatar e depois atualizar preview
+            await preloadAvatar();
+            updatePreview();
+        });
+        
+        function renderGameSelector() {
+            const selector = document.getElementById('gameSelector');
+            selector.innerHTML = '';
+            
+            gamesList.forEach(game => {
+                const div = document.createElement('div');
+                div.className = 'game-option';
+                div.dataset.appid = game.appid;
+                div.onclick = function() { selectGame(game.appid, this); };
+                div.innerHTML = `
+                    <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.appid}/capsule_184x69.jpg" 
+                         onerror="this.src='https://placehold.co/60x30/111/fff?text=?'">
+                    <span>${game.name}</span>
+                `;
+                selector.appendChild(div);
+            });
+        }
+        
+        function filterGames() {
+            const query = document.getElementById('gameSearch').value.toLowerCase();
+            document.querySelectorAll('.game-option').forEach(el => {
+                const name = el.querySelector('span').innerText.toLowerCase();
+                el.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        }
+        
+        function selectGame(appid, element) {
+            selectedGame = gamesList.find(g => g.appid == appid);
+            
+            document.querySelectorAll('.game-option').forEach(el => el.classList.remove('selected'));
+            if (element) element.classList.add('selected');
+            
+            document.getElementById('showGame').checked = true;
+            toggleOpacitySlider(); // Mostrar slider de opacidade
+            
+            // Pré-carregar imagem do jogo e atualizar preview
+            preloadGame().then(() => updatePreview());
+        }
+        
+        function setTemplate(name) {
+            currentTemplate = name;
+            const t = templates[name];
+            
+            document.getElementById('color1').value = t.color1;
+            document.getElementById('color2').value = t.color2;
+            document.getElementById('bgColor').value = t.bg;
+            
+            document.querySelectorAll('.template-btn').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            updatePreview();
+        }
+        
+        function setResolution(width, height) {
+            currentResolution = { width, height };
+            
+            document.querySelectorAll('.resolution-tab').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Atualizar aspect ratio do container
+            const container = document.querySelector('.preview-container');
+            container.style.aspectRatio = `${width}/${height}`;
+            
+            initCanvas();
+            updatePreview();
+        }
+        
+        function initCanvas() {
+            const canvas = document.getElementById('wallpaperCanvas');
+            const container = document.querySelector('.preview-container');
+            
+            canvas.width = currentResolution.width;
+            canvas.height = currentResolution.height;
+        }
+        
+        // Cache de imagens carregadas
+        let avatarImage = null;
+        let gameImage = null;
+        
+        // Carregar imagem como Promise
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('Failed to load image'));
+                img.src = src;
+            });
+        }
+        
+        // Pré-carregar avatar
+        async function preloadAvatar() {
+            try {
+                avatarImage = await loadImage(userProfile.avatar);
+                console.log('✅ Avatar carregado');
+            } catch (e) {
+                console.log('❌ Falha ao carregar avatar');
+                avatarImage = null;
+            }
+        }
+        
+        // Pré-carregar jogo selecionado
+        async function preloadGame() {
+            if (!selectedGame) return;
+            
+            // Lista de URLs para tentar (em ordem de preferência para wallpaper)
+            const imageUrls = [
+                `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${selectedGame.appid}/page_bg_generated_v6b.jpg`,
+                `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${selectedGame.appid}/library_600x900.jpg`,
+                `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${selectedGame.appid}/library_hero.jpg`,
+                `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${selectedGame.appid}/header.jpg`
+            ];
+            
+            for (const url of imageUrls) {
+                try {
+                    gameImage = await loadImage(url);
+                    console.log('✅ Imagem do jogo carregada:', url);
+                    return;
+                } catch (e) {
+                    continue;
+                }
+            }
+            
+            console.log('❌ Falha ao carregar imagem do jogo');
+            gameImage = null;
+        }
+        
+        function updateOpacityValue() {
+            const slider = document.getElementById('gameOpacity');
+            const valueDisplay = document.getElementById('opacityValue');
+            valueDisplay.textContent = slider.value + '%';
+        }
+        
+        function toggleOpacitySlider() {
+            const showGame = document.getElementById('showGame').checked;
+            const container = document.getElementById('gameOpacityContainer');
+            container.style.display = showGame ? 'block' : 'none';
+        }
+        
+        async function updatePreview() {
+            const canvas = document.getElementById('wallpaperCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const color1 = document.getElementById('color1').value;
+            const color2 = document.getElementById('color2').value;
+            const bgColor = document.getElementById('bgColor').value;
+            
+            const showAvatar = document.getElementById('showAvatar').checked;
+            const showUsername = document.getElementById('showUsername').checked;
+            const showStats = document.getElementById('showStats').checked;
+            const showGame = document.getElementById('showGame').checked;
+            const showLogo = document.getElementById('showLogo').checked;
+            const customText = document.getElementById('customText').value;
+            
+            // Limpar canvas
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Gradient de fundo
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, color1 + '30');
+            gradient.addColorStop(1, color2 + '30');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid pattern
+            ctx.strokeStyle = color1 + '15';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Círculos decorativos
+            ctx.beginPath();
+            ctx.arc(canvas.width * 0.8, canvas.height * 0.3, 200, 0, Math.PI * 2);
+            const circleGrad = ctx.createRadialGradient(
+                canvas.width * 0.8, canvas.height * 0.3, 0,
+                canvas.width * 0.8, canvas.height * 0.3, 200
+            );
+            circleGrad.addColorStop(0, color2 + '40');
+            circleGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = circleGrad;
+            ctx.fill();
+            
+            // Conteúdo centralizado
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Desenhar imagem do jogo como background se habilitado
+            if (showGame && gameImage) {
+                // Calcular escala para cobrir todo o canvas (cover) e centralizar
+                const imgRatio = gameImage.width / gameImage.height;
+                const canvasRatio = canvas.width / canvas.height;
+                
+                let drawWidth, drawHeight, drawX, drawY;
+                
+                if (imgRatio > canvasRatio) {
+                    // Imagem mais larga - ajustar pela altura
+                    drawHeight = canvas.height;
+                    drawWidth = gameImage.width * (canvas.height / gameImage.height);
+                    drawX = (canvas.width - drawWidth) / 2;
+                    drawY = 0;
+                } else {
+                    // Imagem mais alta - ajustar pela largura
+                    drawWidth = canvas.width;
+                    drawHeight = gameImage.height * (canvas.width / gameImage.width);
+                    drawX = 0;
+                    drawY = (canvas.height - drawHeight) / 2;
+                }
+                
+                // Usar opacidade do slider
+                const gameOpacity = document.getElementById('gameOpacity').value / 100;
+                ctx.globalAlpha = gameOpacity;
+                ctx.drawImage(gameImage, drawX, drawY, drawWidth, drawHeight);
+                ctx.globalAlpha = 1;
+                
+                // Overlay com gradiente sutil para melhor legibilidade do texto
+                const overlayGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                overlayGrad.addColorStop(0, 'rgba(0, 0, 0, 0.1)');
+                overlayGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0.25)');
+                overlayGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.4)');
+                overlayGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+                ctx.fillStyle = overlayGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Avatar
+            if (showAvatar) {
+                const avatarSize = Math.min(canvas.width, canvas.height) * 0.15;
+                const avatarY = centerY - avatarSize;
+                
+                // Borda do avatar
+                ctx.beginPath();
+                ctx.arc(centerX, avatarY, avatarSize / 2 + 5, 0, Math.PI * 2);
+                const avatarGrad = ctx.createLinearGradient(
+                    centerX - avatarSize/2, avatarY, 
+                    centerX + avatarSize/2, avatarY
+                );
+                avatarGrad.addColorStop(0, color1);
+                avatarGrad.addColorStop(1, color2);
+                ctx.strokeStyle = avatarGrad;
+                ctx.lineWidth = 5;
+                ctx.stroke();
+                
+                // Desenhar avatar real ou placeholder
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, avatarY, avatarSize / 2, 0, Math.PI * 2);
+                ctx.clip();
+                
+                if (avatarImage) {
+                    // Desenhar imagem do avatar
+                    ctx.drawImage(avatarImage, centerX - avatarSize/2, avatarY - avatarSize/2, avatarSize, avatarSize);
+                } else {
+                    // Placeholder
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fill();
+                    ctx.font = `${avatarSize * 0.3}px Arial`;
+                    ctx.fillStyle = color1;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('👤', centerX, avatarY);
+                }
+                ctx.restore();
+            }
+            
+            // Username
+            if (showUsername) {
+                ctx.font = `bold ${canvas.width * 0.04}px Orbitron`;
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(userProfile.username, centerX, centerY + canvas.height * 0.05);
+            }
+            
+            // Custom text
+            if (customText) {
+                ctx.font = `${canvas.width * 0.02}px Rajdhani`;
+                ctx.fillStyle = color1;
+                ctx.fillText(customText, centerX, centerY + canvas.height * 0.12);
+            }
+            
+            // Stats
+            if (showStats) {
+                const statsY = centerY + canvas.height * 0.2;
+                const statSpacing = canvas.width * 0.15;
+                
+                const stats = [
+                    { icon: '🏆', value: userProfile.platinums, label: 'Platinas' },
+                    { icon: '🎮', value: userProfile.games, label: 'Jogos' },
+                    { icon: '⭐', value: userProfile.achievements, label: 'Conquistas' }
+                ];
+                
+                stats.forEach((stat, i) => {
+                    const x = centerX + (i - 1) * statSpacing;
+                    
+                    ctx.font = `${canvas.width * 0.025}px Arial`;
+                    ctx.fillText(stat.icon, x, statsY);
+                    
+                    ctx.font = `bold ${canvas.width * 0.03}px Orbitron`;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(stat.value, x, statsY + canvas.height * 0.05);
+                    
+                    ctx.font = `${canvas.width * 0.015}px Rajdhani`;
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillText(stat.label, x, statsY + canvas.height * 0.08);
+                });
+            }
+            
+            // Logo
+            if (showLogo) {
+                ctx.font = `${canvas.width * 0.015}px Orbitron`;
+                ctx.fillStyle = color1 + '80';
+                ctx.textAlign = 'right';
+                ctx.fillText('STEAMTRACK', canvas.width - 30, canvas.height - 30);
+            }
+            
+            // Linhas decorativas
+            ctx.strokeStyle = color1 + '50';
+            ctx.lineWidth = 2;
+            
+            // Linha superior
+            ctx.beginPath();
+            ctx.moveTo(0, 5);
+            ctx.lineTo(canvas.width * 0.3, 5);
+            ctx.stroke();
+            
+            // Linha inferior
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.7, canvas.height - 5);
+            ctx.lineTo(canvas.width, canvas.height - 5);
+            ctx.stroke();
+        }
+        
+        function generateWallpaper() {
+            updatePreview();
+            
+            // Animação de feedback
+            const btn = document.querySelector('.generate-btn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Gerado!';
+            btn.style.background = 'var(--success)';
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-magic"></i> Gerar Wallpaper';
+                btn.style.background = '';
+            }, 1500);
+        }
+        
+        function downloadWallpaper(format) {
+            const canvas = document.getElementById('wallpaperCanvas');
+            const link = document.createElement('a');
+            
+            if (format === 'png') {
+                link.download = 'steam-wallpaper.png';
+                link.href = canvas.toDataURL('image/png');
+            } else {
+                link.download = 'steam-wallpaper.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+            }
+            
+            link.click();
+        }
+        
+        async function copyToClipboard() {
+            const canvas = document.getElementById('wallpaperCanvas');
+            
+            try {
+                const blob = await new Promise(resolve => canvas.toBlob(resolve));
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+                // Feedback visual no botão
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+                setTimeout(() => btn.innerHTML = originalText, 2000);
+            } catch (err) {
+                console.log('Falha ao copiar, tente baixar');
+            }
+        }
+        
+        // Carregar tema do localStorage
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+            document.body.classList.remove('theme-rgb', 'theme-retro', 'theme-light', 'theme-dark', 'theme-matrix', 'theme-fire');
+            if (savedTheme !== 'default') {
+                document.body.classList.add(`theme-${savedTheme}`);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadTheme);
+    </script>
+</body>
+</html>
