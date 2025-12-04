@@ -271,6 +271,26 @@ const SteamCache = (function() {
     }
 
     /**
+     * Obtém TODAS as conquistas de um usuário do cache
+     */
+    async function getAllAchievements(steamId) {
+        await init();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORES.ACHIEVEMENTS, 'readonly');
+            const store = tx.objectStore(STORES.ACHIEVEMENTS);
+            const index = store.index('steamId');
+            const request = index.getAll(steamId);
+            
+            request.onsuccess = () => {
+                const achievements = request.result || [];
+                console.log(`🏆 ${achievements.length} conquistas carregadas do cache para ${steamId}`);
+                resolve(achievements);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    /**
      * Salva o schema de conquistas de um jogo
      */
     async function saveGameSchema(appid, schema) {
@@ -467,6 +487,7 @@ const SteamCache = (function() {
         // Achievements
         saveAchievements,
         getAchievements,
+        getAllAchievements,
         // Schema
         saveGameSchema,
         getGameSchema,
