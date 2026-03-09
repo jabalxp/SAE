@@ -1,0 +1,141 @@
+/* variables.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap');
+
+:root {
+    /* SaaS Midnight + Emerald Design System */
+    --primary-color: #10b981;
+    /* Emerald Neon */
+    --primary-glow: rgba(16, 185, 129, 0.4);
+    --secondary-color: #0ea5e9;
+    /* Sky Blue */
+
+    --bg-dark: #020617;
+    /* Deepest Midnight Slated */
+    --bg-page: #020617;
+    --bg-panel: #0f172a;
+    --bg-card: #1e293b;
+
+    --glass-bg: rgba(15, 23, 42, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-border-hover: rgba(16, 185, 129, 0.5);
+
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    /* Topografia & Geometria - Sharp SaaS Style */
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* Estrutura Nítida (Sharp) */
+    --card-radius: 4px;
+    --btn-radius: 2px;
+    --avatar-size: 160px;
+
+    /* Layout & Tension */
+    --container-max: 1440px;
+    --sidebar-width: 280px;
+
+    /* Efeitos de Camada */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.1);
+    --neon-glow: 0 0 20px var(--primary-glow);
+}
+
+/* Fallbacks para outros temas caso o usuário troque, mas o base é o azul neon */
+body.theme-matrix {
+    --primary-color: #00ff41;
+    --primary-glow: rgba(0, 255, 65, 0.6);
+    --glass-border: rgba(0, 255, 65, 0.2);
+    --glass-border-hover: rgba(0, 255, 65, 0.5);
+}
+
+body.theme-fire {
+    --primary-color: #ffbd2e;
+    --primary-glow: rgba(255, 189, 46, 0.6);
+    --glass-border: rgba(255, 189, 46, 0.2);
+    --glass-border-hover: rgba(255, 189, 46, 0.5);
+}
+
+body.theme-retro {
+    --primary-color: #fca311;
+    --card-radius: 0px;
+    --font-display: 'Press Start 2P', cursive;
+    --btn-radius: 0px;
+}
+
+body.theme-light {
+    --bg-dark: #f8f9fa;
+    --bg-panel: #ffffff;
+    --text-main: #212529;
+    --text-dim: #6c757d;
+    --glass-border: #dee2e6;
+    --primary-color: #007bff;
+    --primary-glow: rgba(0, 123, 255, 0.3);
+}
+
+body.theme-dark {
+    --primary-color: #e83e8c;
+    --primary-glow: rgba(232, 62, 140, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.15);
+}
+
+/* --- ESTILOS DE MOCKUPS GERADOS --- */
+
+/* 1. Cyberpunk Neon */
+body.theme-cyberpunk {
+    --bg-dark: #020204;
+    --bg-panel: rgba(10, 5, 20, 0.85);
+    --bg-card: rgba(20, 10, 35, 0.8);
+    --primary-color: #ff007f;
+    /* Rosa Neon */
+    --primary-glow: rgba(255, 0, 127, 0.7);
+    --secondary-color: #00f3ff;
+    /* Azul Neon */
+    --glass-border: rgba(255, 0, 127, 0.3);
+    --glass-border-hover: rgba(0, 243, 255, 0.6);
+    --font-display: 'Orbitron', sans-serif;
+    --card-radius: 4px;
+    --btn-radius: 2px;
+}
+
+/* 2. Glassmorphism Premium */
+body.theme-glassmorphism {
+    --bg-dark: #0f172a;
+    /* Slate dark */
+    --bg-panel: rgba(30, 41, 59, 0.4);
+    --bg-card: rgba(51, 65, 85, 0.3);
+    --primary-color: #8b5cf6;
+    /* Violeta elegante */
+    --primary-glow: rgba(139, 92, 246, 0.4);
+    --secondary-color: #3b82f6;
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-hover: rgba(255, 255, 255, 0.25);
+    --card-radius: 24px;
+    --btn-radius: 12px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* 3. Minimalista */
+body.theme-minimalista {
+    --bg-dark: #000000;
+    --bg-panel: #0a0a0a;
+    --bg-card: #111111;
+    --primary-color: #ffffff;
+    /* Alto contraste */
+    --primary-glow: rgba(255, 255, 255, 0.1);
+    --secondary-color: #0066cc;
+    --text-main: #f0f0f0;
+    --text-dim: #888888;
+    --glass-border: #222222;
+    --glass-border-hover: #444444;
+    --font-display: 'Rajdhani', sans-serif;
+    --card-radius: 0px;
+    --btn-radius: 0px;
+}

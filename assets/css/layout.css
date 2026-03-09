@@ -1,0 +1,303 @@
+/* layout.css - Header e Navegação Estrutural SaaS Premium */
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 40px;
+    margin-bottom: 48px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 10000;
+    gap: 32px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 28px;
+    color: var(--primary-color);
+}
+
+.site-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+}
+
+/* --- Navigation Tabs SaaS Style (Sharp & Minimal) --- */
+.nav-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.main-nav.tabs-nav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Esconder scrollbar padrão */
+}
+
+.main-nav.tabs-nav::-webkit-scrollbar {
+    display: none;
+}
+
+
+.nav-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    padding: 8px 16px;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.nav-tab i {
+    font-size: 14px;
+    opacity: 0.5;
+}
+
+.nav-tab:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.nav-tab.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    border-radius: 0;
+    font-weight: 700;
+    background: transparent;
+}
+
+.nav-tab.active i {
+    color: var(--primary-color);
+    opacity: 1;
+}
+
+.header-controls {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+/* Profile XP Bar Header (SaaS Style) */
+.header-xp-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 6px 12px;
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+}
+
+.header-xp-container:hover {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.header-lvl-badge {
+    background: var(--primary-color);
+    color: var(--bg-dark);
+    font-weight: 800;
+    font-size: 11px;
+    padding: 2px 6px;
+    text-transform: uppercase;
+    font-family: var(--font-display);
+}
+
+.header-xp-bar {
+    width: 80px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.header-xp-fill {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.6s ease;
+}
+
+.theme-select {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-dim);
+    padding: 6px 12px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all var(--transition-fast);
+}
+
+.theme-select:hover {
+    border-color: var(--text-dim);
+    color: #fff;
+}
+
+/* --- Menu Dropdown Technical style --- */
+.nav-menu-container {
+    position: relative;
+}
+
+.nav-menu-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-dim);
+    padding: 8px 16px;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-menu-btn:hover {
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.nav-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--bg-panel);
+    border: 1px solid var(--glass-border);
+    min-width: 220px;
+    box-shadow: var(--shadow-premium);
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all var(--transition-base);
+    z-index: 1000;
+    display: grid;
+}
+
+.nav-menu-container:hover .nav-menu-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nav-menu-dropdown a {
+    color: var(--text-dim);
+    padding: 10px 14px;
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-menu-dropdown a i {
+    font-size: 14px;
+    width: 16px;
+    opacity: 0.5;
+}
+
+.nav-menu-dropdown a:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary-color);
+}
+
+.nav-menu-dropdown a:hover i {
+    opacity: 1;
+}
+
+
+/* Responsividade Header */
+@media screen and (max-width: 1024px) {
+    .main-header {
+        flex-direction: column;
+        padding: 20px;
+        gap: 20px;
+    }
+
+    .nav-group {
+        order: 3;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .main-nav {
+        width: 100%;
+    }
+
+    .nav-menu-container {
+        width: 100%;
+    }
+
+    .nav-menu-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-menu-dropdown {
+        position: static;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.02);
+        display: none;
+        /* Escondido por padrão no mobile */
+    }
+
+    /* Simples toggle JS ou CSS hover no mobile */
+    .nav-menu-container:hover .nav-menu-dropdown {
+        display: grid;
+    }
+
+    .header-controls {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .logo-area {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+    }
+}

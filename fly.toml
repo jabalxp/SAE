@@ -1,23 +1,24 @@
-FROM node:18-alpine
+app = "steamtrack-api"
+primary_region = "gru"
 
-WORKDIR /app
+[build]
 
-# Copiar package.json e instalar dependências
-COPY package*.json ./
-RUN npm install --production
+[env]
+  DATABASE_PATH = "/data/steamtrack.db"
 
-# Copiar o servidor e banco de dados
-COPY server.js ./
-COPY database.js ./
+[mounts]
+  source = "steamtrack_data"
+  destination = "/data"
 
-# Criar diretório para o banco SQLite
-RUN mkdir -p /data
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
 
-# Variável de ambiente para o caminho do banco
-ENV DATABASE_PATH=/data/steamtrack.db
-
-# Expor porta
-EXPOSE 3000
-
-# Iniciar servidor
-CMD ["node", "server.js"]
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

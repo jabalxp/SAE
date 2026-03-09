@@ -1,46 +1,10 @@
-<?php
-require_once 'api/config/db.php';
-require_once 'api/utils/helpers.php';
-
-$steamId = $_GET['steamid'] ?? null;
-$userData = null;
-$pageTitle = "Steam Achievements Explorer";
-$pageDesc = "Explore suas conquistas da Steam com visual Glassmorphism Premium.";
-$pageImage = "assets/images/og-default.jpg";
-
-if ($steamId) {
-    try {
-        $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT personaname, avatarfull, last_update FROM users WHERE steamid = ?");
-        $stmt->execute([$steamId]);
-        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($userData) {
-            $pageTitle = $userData['personaname'] . " - Perfil SAE";
-            $pageDesc = "Confira as platinas e conquistas de " . $userData['personaname'] . " no Steam Achievements Explorer.";
-            $pageImage = $userData['avatarfull'];
-        }
-    }
-    catch (Exception $e) {
-    // Silencioso, mantém defaults
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?></title>
-    
-    <!-- OpenGraph / Social Meta Tags -->
-    <meta property="og:title" content="<?php echo $pageTitle; ?>">
-    <meta property="og:description" content="<?php echo $pageDesc; ?>">
-    <meta property="og:image" content="<?php echo $pageImage; ?>">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
-
+    <title>Steam Achievements Explorer</title>
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#66c0f4">
@@ -48,10 +12,10 @@ if ($steamId) {
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SAE">
     <link rel="apple-touch-icon" href="icons/icon-152x152.png">
-    
-    <!-- Fontes SaaS Premium -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    
+    <!-- Fontes -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;600;700&family=Press+Start+2P&display=swap"
+        rel="stylesheet">
     <!-- Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bibliotecas Externas -->
@@ -66,14 +30,9 @@ if ($steamId) {
     <link rel="stylesheet" href="assets/css/base.css">
     <link rel="stylesheet" href="assets/css/layout.css">
     <link rel="stylesheet" href="assets/css/components.css">
-    
-    <script>
-        // Injetar o SteamID inicial se vier via PHP
-        window.INITIAL_STEAMID = "<?php echo $steamId; ?>";
-    </script>
 </head>
 
-<body>
+<body class="theme-cyberpunk">
 
     <div id="dynamic-bg"></div>
     <div id="scan-progress-container">
@@ -114,29 +73,29 @@ if ($steamId) {
                 <i class="fab fa-steam logo-icon"></i>
                 <h1 class="site-title">SAE</h1>
             </div>
-            <div class="nav-group">
-                <nav class="main-nav tabs-nav">
-                    <a href="index.php" class="nav-tab active"><i class="fas fa-gamepad"></i> <span data-i18n-key="nav_library">Biblioteca</span></a>
-                    <a href="hall.html" class="nav-tab"><i class="fas fa-trophy"></i> <span data-i18n-key="hall_title">Hall da Fama</span></a>
-                    <a href="#" class="nav-tab" onclick="openLeaderboard()" id="navLeaderboard"><i class="fas fa-ranking-star"></i> <span>Leaderboard</span></a>
-                </nav>
-
-                <div class="nav-menu-container">
-                    <button class="nav-menu-btn"><i class="fas fa-ellipsis-v"></i> <span data-i18n-key="nav_more">Mais</span></button>
-                    <div class="nav-menu-dropdown">
-                        <a href="roleta.html"><i class="fas fa-dice"></i> <span data-i18n-key="nav_roulette">Roleta</span></a>
-                        <a href="level.html"><i class="fas fa-star"></i> Level / XP</a>
-                        <a href="prices.html"><i class="fas fa-chart-line"></i> <span data-i18n-key="prices_title">Histórico de Preços</span></a>
-                        <a href="compare.html"><i class="fas fa-users"></i> <span data-i18n-key="compare_title">Comparar</span></a>
-                        <a href="museum.html"><i class="fas fa-landmark"></i> Museu 3D</a>
-                        <a href="wallpaper.html"><i class="fas fa-image"></i> <span data-i18n-key="nav_wallpaper">Wallpaper</span></a>
-                        <a href="desafio.html"><i class="fas fa-calendar-check"></i> <span data-i18n-key="challenge_title">Desafio Diário</span></a>
-                        <a href="timeline.html"><i class="fas fa-clock-rotate-left"></i> <span data-i18n-key="nav_timeline">Timeline</span></a>
-                        <a href="hardware_check.html"><i class="fas fa-microchip"></i> <span data-i18n-key="nav_hardware">Hardware Lab</span></a>
-                        <a href="wrapped.html"><i class="fas fa-gift"></i> Wrapped</a>
-                    </div>
-                </div>
-            </div>
+            <nav class="main-nav tabs-nav">
+                <a href="index.html" class="nav-tab active"><i class="fas fa-gamepad"></i> <span
+                        data-i18n-key="nav_library">Biblioteca</span></a>
+                <a href="hall.html" class="nav-tab"><i class="fas fa-trophy"></i> <span data-i18n-key="hall_title">Hall
+                        da Fama</span></a>
+                <a href="roleta.html" class="nav-tab"><i class="fas fa-dice"></i> <span
+                        data-i18n-key="nav_roulette">Roleta</span></a>
+                <a href="level.html" class="nav-tab"><i class="fas fa-star"></i> Level / XP</a>
+                <a href="prices.html" class="nav-tab"><i class="fas fa-chart-line"></i> <span
+                        data-i18n-key="prices_title">Histórico de Preços</span></a>
+                <a href="compare.html" class="nav-tab"><i class="fas fa-users"></i> <span
+                        data-i18n-key="compare_title">Comparar</span></a>
+                <a href="museum.html" class="nav-tab"><i class="fas fa-landmark"></i> Museu 3D</a>
+                <a href="wallpaper.html" class="nav-tab"><i class="fas fa-image"></i> <span
+                        data-i18n-key="nav_wallpaper">Wallpaper</span></a>
+                <a href="desafio.html" class="nav-tab"><i class="fas fa-calendar-check"></i> <span
+                        data-i18n-key="challenge_title">Desafio Diário</span></a>
+                <a href="timeline.html" class="nav-tab"><i class="fas fa-clock-rotate-left"></i> <span
+                        data-i18n-key="nav_timeline">Timeline</span></a>
+                <a href="hardware_check.html" class="nav-tab"><i class="fas fa-microchip"></i> <span
+                        data-i18n-key="nav_hardware">Hardware Lab</span></a>
+                <a href="wrapped.html" class="nav-tab"><i class="fas fa-gift"></i> Wrapped</a>
+            </nav>
             <div class="header-controls">
                 <a href="level.html" class="header-xp-container" id="headerXpContainer" style="display:none;"
                     title="Ver detalhes do nível">
@@ -229,10 +188,6 @@ if ($steamId) {
                                 class="stat-label" data-i18n-key="achievements">Conquistas</span></div>
                         <div class="stat-item"><span class="stat-value" id="completionRate">0%</span><span
                                 class="stat-label" data-i18n-key="globalAverage">Média Global</span></div>
-                    </div>
-                    <!-- SITE BADGES SECTION -->
-                    <div class="user-site-badges" id="userSiteBadges">
-                        <!-- badges will be injected here -->
                     </div>
                 </div>
             </section>
@@ -627,35 +582,6 @@ if ($steamId) {
                     style="width: 100%; padding: 15px; border-radius: 10px; border: none; background: #5865F2; color: #fff; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
                     <i class="fab fa-discord"></i> Enviar para Discord
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Leaderboard -->
-    <div class="modal-overlay" id="leaderboardModal">
-        <div class="leaderboard-modal">
-            <div class="modal-header">
-                <h2 class="modal-game-title"><i class="fas fa-ranking-star"></i> Ranking de Caçadores (SAE)</h2>
-                <button class="close-modal-btn" onclick="document.getElementById('leaderboardModal').classList.remove('open')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="leaderboard-container">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Jogador</th>
-                                <th>Platinas</th>
-                                <th>Conquistas</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboardBody">
-                            <!-- Injected via JS -->
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>

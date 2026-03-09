@@ -1,6 +1,29 @@
-require_once 'api/db.php';
-// O arquivo api/db.php já fornece a variável $pdo com a conexão correta
+<?php
+// Configurações de Banco e API
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
 
+$host = 'localhost';
+$db   = 'steam_explorer';
+$user = 'root';     // Seu usuário do MySQL (padrão do XAMPP é root)
+$pass = '';         // Sua senha do MySQL (padrão do XAMPP é vazio)
+$charset = 'utf8mb4';
+
+$steam_api_key = '8B07FE7C9405216BF61C1F439E93922B';
+
+$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
+
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+    echo json_encode(['error' => 'Erro de conexão com Banco de Dados: ' . $e->getMessage()]);
+    exit;
+}
 
 $action = $_GET['action'] ?? '';
 
