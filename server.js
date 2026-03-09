@@ -1,703 +1,345 @@
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
+# 🎮 Steam Explorer - Roadmap de Desenvolvimento
 
-const app = express();
-app.use(cors());
+**Última Atualização:** Janeiro 2025  
+**Versão Atual:** 1.0
 
-// SUA CHAVE DA STEAM
-const STEAM_API_KEY = '8B07FE7C9405216BF61C1F439E93922B';
+---
 
-// Configuração dos Workers
-const CONCURRENCY_LIMIT = 30; // Quantas requisições simultâneas (muito mais rápido que o navegador)
+## 📊 Análise do Estado Atual
 
-// Rota Principal
-app.get('/api/profile', async (req, res) => {
-    const { query } = req.query;
-    if (!query) return res.status(400).json({ error: 'Query required' });
+### ✅ Features JÁ IMPLEMENTADAS
 
-    console.log(`[Search] Iniciando busca para: ${query}`);
+| Feature | Status | Notas |
+|---------|--------|-------|
+| Sistema de XP | ✅ Completo | Barra XP no header + página level.html |
+| Página de Levels | ✅ Completo | 20 níveis, nomes e ícones |
+| Temas visuais | ✅ Completo | Matrix, Fire, Retro, Light, Dark, RGB |
+| Temas sazonais | ✅ Completo | Christmas + Halloween com preview |
+| Sistema de traduções | ✅ Base pronta | languages.js com 5 idiomas (EN, ES, PT, FR, DE) |
+| Cache de API (PHP) | ✅ Parcial | 24h cache no PHP (api.php) |
+| **IndexedDB Cache** | ✅ **NOVO** | **Cache local de conquistas + jogos + perfil** |
+| Exportar imagem | ✅ Completo | html2canvas implementado |
+| Ranking/Grid de jogos | ✅ Completo | CSS com ranking-col e ranking-grid |
+| Scan de conquistas | ✅ Melhorado | 15 requests paralelos, retry automático |
+| Painel de scan | ✅ Completo | Pause/Resume/Retry + indicador de cache |
+| **Carregamento instantâneo** | ✅ **NOVO** | **Dados do cache carregam em <1s** |
+| **Sync em background** | ✅ **NOVO** | **Novos jogos detectados automaticamente** |
 
-    try {
-        // 1. Resolver ID (se for vanity url ou link)
-        let steamId = query;
-        if (isNaN(query)) {
-            // Limpa URL se foi colada inteira
-            const vanity = query.includes('/id/') ? query.split('/id/')[1].split('/')[0].replace('/', '') : query;
-            const resolve = await axios.get(`http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${STEAM_API_KEY}&vanityurl=${vanity}`);
-            if (resolve.data.response.success === 1) {
-                steamId = resolve.data.response.steamid;
-            } else {
-                return res.status(404).json({ error: 'Usuário não encontrado' });
-            }
-        }
+---
 
-        // 2. Buscar Dados do Perfil
-        const summaryReq = axios.get(`http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${steamId}`);
-        // 3. Buscar Lista de Jogos (TODOS)
-        const gamesReq = axios.get(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`);
-        // 4. Buscar Amigos
-        const friendsReq = axios.get(`http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&relationship=friend`);
+### 🔧 Features PARCIALMENTE IMPLEMENTADAS
 
-        const [summaryRes, gamesRes, friendsRes] = await Promise.allSettled([summaryReq, gamesReq, friendsReq]);
+| Feature | Status | O que falta |
+|---------|--------|-------------|
+| HowLongToBeat | 🔧 Schema pronto | Campo `hltb_main` no database.js, falta integração API |
+| Metacritic | 🔧 Schema pronto | Campo `metacritic_score` no database.js, falta integração |
+| Multi-idiomas | 🔧 Base pronta | Expandir traduções, adicionar seletor UI |
+| Gráficos | 🔧 Chart.js incluso | Só tem básico, falta radar/heatmap |
 
-        // Dados Iniciais
-        const user = summaryRes.value?.data?.response?.players?.[0];
-        const games = gamesRes.value?.data?.response?.games || [];
-        let friends = [];
+---
 
-        // Processar amigos (pegar detalhes)
-        if (friendsRes.status === 'fulfilled' && friendsRes.value.data.friendslist) {
-            const friendIds = friendsRes.value.data.friendslist.friends.map(f => f.steamid);
-            // A API só aceita 100 IDs por vez, vamos pegar só os primeiros 100 pra ser rápido, ou fazer batching se quiser todos
-            // Para o exemplo, vamos pegar todos em lotes
-            const chunks = [];
-            for (let i = 0; i < friendIds.length; i += 100) {
-                chunks.push(friendIds.slice(i, i + 100).join(','));
-            }
-            
-            const friendDetailsPromises = chunks.map(ids => 
-                axios.get(`http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${ids}`)
-            );
-            
-            const friendsDetailsRes = await Promise.all(friendDetailsPromises);
-            friendsDetailsRes.forEach(r => {
-                if(r.data.response.players) friends.push(...r.data.response.players);
-            });
-        }
+### 🆕 Features NOVAS (Não Existem)
 
-        if (!user) return res.status(404).json({ error: 'Perfil privado ou não encontrado' });
+#### 📅 **Visualização de Dados**
+- [ ] Heatmap calendar (estilo GitHub)
+- [ ] Mural de jogos (grid visual)
+- [ ] Museu de troféus 3D
+- [ ] Confetti/chuva para platinas
+- [ ] Gráfico radar de gêneros
 
-        // ---------------------------------------------------------
-        // A MÁGICA DOS WORKERS (Coleta de Conquistas)
-        // ---------------------------------------------------------
-        
-        // Filtra apenas jogos que podem ter conquistas para não perder tempo
-        // (Jogos sem playtime ou muito antigos as vezes não tem stats visíveis)
-        const gamesToScan = games.filter(g => g.has_community_visible_stats);
-        
-        console.log(`[Workers] Iniciando análise de ${gamesToScan.length} jogos...`);
+#### 🎯 **Gamificação**
+- [ ] Desafios diários/semanais
+- [ ] Conquistas do site (badges)
+- [ ] Bingo de jogos
+- [ ] Modo Nuzlocke
+- [ ] Streaks (dias consecutivos)
 
-        // Variáveis "In-Memory" (Nosso Banco de Dados temporário)
-        let totalAchievements = 0;
-        let totalPlatinum = 0;
-        let completedSum = 0;
-        let gamesCounted = 0;
+#### 📊 **Estatísticas Avançadas**
+- [ ] Calculadora valor/tempo
+- [ ] Valor estimado da conta
+- [ ] Previsão de conclusão
+- [ ] Comparação entre perfis
+- [ ] Histórico de preços
 
-        // Função Worker
-        const processGame = async (game) => {
-            try {
-                const statsRes = await axios.get(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&appid=${game.appid}`, {
-                    timeout: 5000 // Timeout curto para não travar se a API engasgar
-                });
+#### 🌐 **Social**
+- [ ] Leaderboard global
+- [ ] Botões de compartilhamento
+- [ ] Integração Discord
+- [ ] Desafios entre amigos
+- [ ] Perfil público
 
-                if (statsRes.data.playerstats && statsRes.data.playerstats.achievements) {
-                    const achs = statsRes.data.playerstats.achievements;
-                    const total = achs.length;
-                    const unlocked = achs.filter(a => a.achieved === 1).length;
-                    
-                    if (total > 0) {
-                        const percent = Math.floor((unlocked / total) * 100);
-                        
-                        // Atualiza Stats Globais (Thread-safe no Node.js pois é single thread event loop)
-                        totalAchievements += unlocked;
-                        completedSum += percent;
-                        gamesCounted++;
-                        if (percent === 100) totalPlatinum++;
+#### 🔧 **Técnico/Performance**
+- [ ] IndexedDB (cache local robusto)
+- [ ] Lazy loading de imagens
+- [ ] Service Worker (PWA)
+- [ ] Acessibilidade (ARIA)
+- [ ] Modo offline
 
-                        // Adiciona dados ao objeto do jogo para o frontend
-                        game.stats = {
-                            total,
-                            unlocked,
-                            percent
-                        };
-                    }
-                }
-            } catch (error) {
-                // Ignora erros individuais (jogo sem conquista ou timeout)
-                game.stats = { error: true };
-            }
-        };
+#### 🧪 **BETA/Experimental**
+- [ ] Museu 3D interativo (Three.js)
+- [ ] Player de soundtracks
+- [ ] Gerador de wallpapers
+- [ ] Integração Spotify gaming
+- [ ] Modo VR
 
-        // Sistema de Fila (Queue) com Limite de Concorrência
-        // Isso evita que a API da Steam nos bloqueie por excesso de requisições
-        const queue = [...gamesToScan];
-        const workers = [];
+---
 
-        for (let i = 0; i < CONCURRENCY_LIMIT; i++) {
-            workers.push((async () => {
-                while (queue.length > 0) {
-                    const game = queue.shift();
-                    await processGame(game);
-                }
-            })());
-        }
+## 🗓️ FASES DE DESENVOLVIMENTO
 
-        await Promise.all(workers); // Espera todos acabarem
+### 📦 FASE 1 - Fundação (1-2 semanas)
+> Infraestrutura e melhorias técnicas
 
-        console.log(`[Workers] Finalizado. Conquistas: ${totalAchievements}`);
+1. **IndexedDB Cache**
+   - Armazenar jogos, conquistas, imagens
+   - Sincronização inteligente com Steam API
+   - Fallback offline
 
-        // --- LÓGICA DE XP ---
-        const totalXp = (totalAchievements * 10) + (totalPlatinum * 1000);
-        const level = totalXp > 0 ? Math.floor(Math.sqrt(totalXp / 100)) : 0;
-        const xpForCurrentLevel = 100 * Math.pow(level, 2);
-        const xpForNextLevel = 100 * Math.pow(level + 1, 2);
+2. **PWA/Service Worker**
+   - Manifesto
+   - Caching strategies
+   - Push notifications
 
-        const xpSql = `
-            INSERT INTO user_xp (steam_id, level, xp, last_updated)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(steam_id) DO UPDATE SET
-            level = excluded.level,
-            xp = excluded.xp,
-            last_updated = excluded.last_updated
-        `;
-        db.run(xpSql, [steamId, level, totalXp]);
-        // --- FIM LÓGICA DE XP ---
+3. **Lazy Loading**
+   - Intersection Observer para imagens
+   - Virtualização de listas longas
 
-        // Prepara resposta final
-        const responseData = {
-            user,
-            games, // Jogos agora incluem a propriedade .stats
-            friends,
-            stats: {
-                totalGames: games.length,
-                totalPlatinum,
-                totalAchievements,
-                averageCompletion: gamesCounted > 0 ? Math.floor(completedSum / gamesCounted) : 0,
-                xp: {
-                    totalXp,
-                    level,
-                    xpForCurrentLevel,
-                    xpForNextLevel
-                }
-            }
-        };
+4. **Acessibilidade**
+   - ARIA labels
+   - Navegação por teclado
+   - Modo alto contraste
 
-        res.json(responseData);
+**Arquivos afetados:** `index.html`, novo `sw.js`, novo `manifest.json`, novo `idb-store.js`
 
-    } catch (error) {
-        console.error('Erro geral:', error.message);
-        res.status(500).json({ error: 'Erro interno no servidor' });
-    }
-});
+---
 
-// Endpoint para buscar conquistas de um jogo específico (usado pelo Desafio Diário)
-app.get('/api/achievements/:steamId/:appId', async (req, res) => {
-    const { steamId, appId } = req.params;
-    
-    if (!steamId || !appId) {
-        return res.status(400).json({ error: 'Steam ID e App ID são necessários' });
-    }
-    
-    console.log(`[Achievements] Buscando conquistas para Steam ID: ${steamId}, App ID: ${appId}`);
-    
-    try {
-        // Buscar conquistas do jogador para este jogo
-        const achievementsRes = await axios.get(
-            `http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&appid=${appId}`,
-            { timeout: 10000 }
-        );
-        
-        if (!achievementsRes.data.playerstats || !achievementsRes.data.playerstats.achievements) {
-            return res.status(404).json({ error: 'Jogo não possui conquistas ou dados não disponíveis' });
-        }
-        
-        // Buscar porcentagens globais das conquistas
-        let globalPercentages = {};
-        try {
-            const globalRes = await axios.get(
-                `http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=${appId}`,
-                { timeout: 5000 }
-            );
-            if (globalRes.data.achievementpercentages?.achievements) {
-                globalRes.data.achievementpercentages.achievements.forEach(a => {
-                    globalPercentages[a.name] = a.percent;
-                });
-            }
-        } catch (e) {
-            console.log('[Achievements] Não foi possível obter porcentagens globais');
-        }
-        
-        const achievements = achievementsRes.data.playerstats.achievements.map(a => ({
-            apiname: a.apiname,
-            name: a.name || a.apiname,
-            achieved: a.achieved === 1,
-            unlocktime: a.unlocktime,
-            percent: globalPercentages[a.apiname] || null
-        }));
-        
-        const unlocked = achievements.filter(a => a.achieved).length;
-        const total = achievements.length;
-        
-        console.log(`[Achievements] ${unlocked}/${total} conquistas desbloqueadas`);
-        
-        res.json({
-            gameName: achievementsRes.data.playerstats.gameName,
-            steamId: steamId,
-            appId: appId,
-            achievements: achievements,
-            unlocked: unlocked,
-            total: total,
-            percent: total > 0 ? Math.round((unlocked / total) * 100) : 0
-        });
-        
-    } catch (error) {
-        console.error(`[Achievements] Erro: ${error.message}`);
-        
-        if (error.response?.status === 403) {
-            return res.status(403).json({ error: 'Perfil privado ou dados de jogo não acessíveis' });
-        }
-        if (error.response?.status === 400) {
-            return res.status(404).json({ error: 'Jogo não possui conquistas' });
-        }
-        
-        res.status(500).json({ error: 'Erro ao buscar conquistas' });
-    }
-});
+### 📊 FASE 2 - Dados e Visualização (2-3 semanas)
+> Integrações externas e gráficos avançados
 
-// Endpoint para buscar jogos de um usuário (usado pelo Desafio Diário)
-app.get('/api/games/:steamId', async (req, res) => {
-    const { steamId } = req.params;
-    
-    if (!steamId) {
-        return res.status(400).json({ error: 'Steam ID é necessário' });
-    }
-    
-    console.log(`[Games] Buscando jogos para Steam ID: ${steamId}`);
-    
-    try {
-        const gamesRes = await axios.get(
-            `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`,
-            { timeout: 10000 }
-        );
-        
-        if (!gamesRes.data.response?.games) {
-            return res.status(404).json({ error: 'Nenhum jogo encontrado ou perfil privado' });
-        }
-        
-        res.json({
-            steamId: steamId,
-            games: gamesRes.data.response.games,
-            gameCount: gamesRes.data.response.game_count
-        });
-        
-    } catch (error) {
-        console.error(`[Games] Erro: ${error.message}`);
-        res.status(500).json({ error: 'Erro ao buscar jogos' });
-    }
-});
+1. **HowLongToBeat API**
+   - Proxy no server.js para evitar CORS
+   - Tempo médio de conclusão
+   - Badge com tempo estimado
 
-app.get('/api/user-xp', (req, res) => {
-    const { steamid } = req.query;
-    if (!steamid) {
-        return res.status(400).json({ error: 'Steam ID is required' });
-    }
+2. **Metacritic Integration**
+   - Score nos cards de jogos
+   - Filtro por nota
 
-    const sql = "SELECT * FROM user_xp WHERE steam_id = ?";
-    db.get(sql, [steamid], (err, row) => {
-        if (err) {
-            res.status(500).json({ "error": err.message });
-            return;
-        }
-        res.json({
-            "message": "success",
-            "data": row
-        });
-    });
-});
+3. **Heatmap Calendar**
+   - Calendário estilo GitHub
+   - Baseado em conquistas por dia
+   - Tooltip com detalhes
 
-app.get('/api/friends-xp', async (req, res) => {
-    const { steamid } = req.query;
-    if (!steamid) {
-        return res.status(400).json({ error: 'Steam ID is required' });
-    }
+4. **Gráfico Radar de Gêneros**
+   - Chart.js radar chart
+   - Análise de gêneros jogados
+   - Comparação visual
 
-    try {
-        // 1. Get friend list from Steam
-        const friendsRes = await axios.get(`http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=${STEAM_API_KEY}&steamid=${steamid}&relationship=friend`);
-        if (!friendsRes.data.friendslist) {
-            return res.json([]); // Private friends list
-        }
-        const friendIds = friendsRes.data.friendslist.friends.map(f => f.steamid);
+5. **Histórico de Preços**
+   - IsThereAnyDeal API
+   - Gráfico de linha temporal
+   - Alertas de preço
 
-        // Include the user's own ID in the list for the leaderboard
-        friendIds.push(steamid);
+**Arquivos afetados:** `server.js`, `index.html`, novo `heatmap.js`, novo `integrations.js`
 
-        // 2. Get player summaries for names and avatars
-        const chunks = [];
-        for (let i = 0; i < friendIds.length; i += 100) {
-            chunks.push(friendIds.slice(i, i + 100).join(','));
-        }
-        
-        const friendDetailsPromises = chunks.map(ids => 
-            axios.get(`http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${ids}`)
-        );
-        
-        const friendsDetailsRes = await Promise.all(friendDetailsPromises);
-        const friendsMap = new Map();
-        friendsDetailsRes.forEach(r => {
-            if(r.data.response.players) {
-                r.data.response.players.forEach(p => {
-                    friendsMap.set(p.steamid, {
-                        name: p.personaname,
-                        avatar: p.avatar
-                    });
-                });
-            }
-        });
+---
 
-        // 3. Query our local DB for their XP
-        const placeholders = friendIds.map(() => '?').join(',');
-        const sql = `SELECT steam_id, level, xp FROM user_xp WHERE steam_id IN (${placeholders})`;
+### 🎮 FASE 3 - Gamificação (2-3 semanas)
+> Engajamento e conquistas do site
 
-        db.all(sql, friendIds, (err, rows) => {
-            if (err) {
-                return res.status(500).json({ error: err.message });
-            }
-            // 4. Combine data and sort
-            const leaderboard = rows.map(row => ({
-                steam_id: row.steam_id,
-                level: row.level,
-                xp: row.xp,
-                name: friendsMap.get(row.steam_id)?.name || '?',
-                avatar: friendsMap.get(row.steam_id)?.avatar || ''
-            })).sort((a, b) => b.xp - a.xp);
+1. **Sistema de Badges do Site**
+   - Conquistas por marcos (100 jogos, 50% platinas, etc.)
+   - Badges visuais no perfil
+   - Notificações de conquista
 
-            res.json(leaderboard);
-        });
+2. **Desafios Diários**
+   - "Complete uma conquista hoje"
+   - "Jogue 1 hora de qualquer jogo"
+   - Sistema de recompensas XP
 
-    } catch (error) {
-        console.error('Error fetching friends XP:', error.message);
-        res.status(500).json({ error: 'Failed to fetch friends XP data' });
-    }
-});
+3. **Streaks**
+   - Contador de dias consecutivos
+   - Multiplicador de XP
+   - Animações de celebração
 
-const hltb = require('howlongtobeat');
-const hltbService = new hltb.HowLongToBeatService();
+4. **Bingo de Jogos**
+   - Cartela aleatória de requisitos
+   - "Complete um jogo indie", "50h em RPG"
+   - Modo competitivo
 
-app.get('/api/game-details/:appid', async (req, res) => {
-    const { appid } = req.params;
+**Arquivos afetados:** `level.html`, novo `challenges.js`, novo `badges.html`
 
-    try {
-        // 1. Check cache first
-        const cacheSql = "SELECT * FROM game_details WHERE appid = ?";
-        db.get(cacheSql, [appid], async (err, row) => {
-            if (err) { return res.status(500).json({ error: err.message }); }
+---
 
-            // Cache is valid for 7 days
-            if (row && (new Date() - new Date(row.last_updated)) < 7 * 24 * 60 * 60 * 1000) {
-                return res.json({ source: 'cache', data: row });
-            }
+### 🌐 FASE 4 - Social (2-3 semanas)
+> Compartilhamento e competição
 
-            // 2. If not in cache or stale, fetch from APIs
-            let metacritic_score = null;
-            let hltb_main = null;
-            let gameName = '';
+1. **Leaderboard**
+   - Ranking de XP
+   - Top completionists
+   - Filtro por amigos
 
-            // Fetch from Steam API
-            const steamRes = await axios.get(`https://store.steampowered.com/api/appdetails?appids=${appid}&cc=us&filters=metacritic,name`);
-            if (steamRes.data && steamRes.data[appid].success) {
-                const steamData = steamRes.data[appid].data;
-                gameName = steamData.name;
-                if (steamData.metacritic) {
-                    metacritic_score = steamData.metacritic.score;
-                }
-            } else {
-                // If Steam API fails, we can't get the name to search HLTB
-                return res.status(404).json({ error: 'Game not found on Steam Store' });
-            }
-            
-            // Fetch from HLTB
-            if (gameName) {
-                try {
-                    const hltbResult = await hltbService.search(gameName);
-                    if (hltbResult.length > 0) {
-                        // Assume the first result is the best match
-                        hltb_main = hltbResult[0].gameplayMain;
-                    }
-                } catch (e) {
-                    console.error(`HLTB search failed for "${gameName}":`, e.message);
-                }
-            }
+2. **Perfil Público**
+   - URL única por usuário
+   - Card de estatísticas
+   - Open Graph meta tags
 
-            // 3. Update cache
-            const updateSql = `
-                INSERT INTO game_details (appid, metacritic_score, hltb_main, last_updated)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(appid) DO UPDATE SET
-                metacritic_score = excluded.metacritic_score,
-                hltb_main = excluded.hltb_main,
-                last_updated = excluded.last_updated
-            `;
-            db.run(updateSql, [appid, metacritic_score, hltb_main]);
-            
-            const newData = { appid, metacritic_score, hltb_main };
-            res.json({ source: 'api', data: newData });
-        });
-    } catch (error) {
-        console.error(`Failed to get game-details for ${appid}:`, error.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+3. **Compartilhamento**
+   - Twitter/X cards
+   - Discord embeds
+   - Imagem personalizada
 
-// Rota para detalhes do Modal (Schema)
-app.get('/api/game/:appid', async (req, res) => {
-    // Implementar se necessário para buscar detalhes finos, ou o front pode fazer
-    // Mas vamos focar no scan principal acima.
-    res.json({msg: "Use o frontend para detalhes específicos por enquanto"});
-});
+4. **Comparação de Perfis**
+   - Side-by-side de stats
+   - Jogos em comum
+   - "Quem tem mais?"
 
-const db = require('./database.js');
+**Arquivos afetados:** novo `profile.html`, novo `leaderboard.html`, `server.js`
 
-app.use(express.json()); // Middleware para parsear JSON bodies
+---
 
-// Rota para popular/atualizar preços
-app.post('/api/update-prices', async (req, res) => {
-    const games = req.body; // Espera um array de { appid, name }
-    if (!Array.isArray(games)) {
-        return res.status(400).json({ error: 'Body should be an array of games' });
-    }
+### 🧪 FASE 5 - Experimental BETA (3-4 semanas)
+> Features avançadas opcionais
 
-    console.log(`[PriceUpdater] Recebido pedido para atualizar ${games.length} jogos.`);
+1. **Museu 3D de Troféus**
+   - Three.js ou Babylon.js
+   - Navegação WASD
+   - Iluminação dinâmica
 
-    const updatePromises = games.map(game => async () => {
-        try {
-            // 1. Garante que o jogo existe na nossa tabela de jogos
-            const gameSql = `INSERT OR IGNORE INTO games (appid, name) VALUES (?, ?)`;
-            db.run(gameSql, [game.appid, game.name]);
+2. **Player de Soundtracks**
+   - Integração YouTube Music API
+   - Playlist baseada em jogos
+   - Mini player flutuante
 
-            // 2. Busca o preço na API da Steam
-            const response = await axios.get(`https://store.steampowered.com/api/appdetails?appids=${game.appid}&cc=us&filters=price_overview`);
-            const gameData = response.data[game.appid];
+3. **Gerador de Wallpapers**
+   - Canvas API
+   - Templates customizáveis
+   - Montagem com jogos favoritos
 
-            if (gameData.success && gameData.data && gameData.data.price_overview) {
-                const price = gameData.data.price_overview.final; // Preço em centavos (ex: 3999 para $39.99)
+4. **Modo VR (Futuro)**
+   - WebXR
+   - Tour virtual pela coleção
+   - Interação com mãos
 
-                // 3. Insere no histórico de preços
-                const priceSql = `INSERT INTO price_history (appid, price_usd) VALUES (?, ?)`;
-                db.run(priceSql, [game.appid, price]);
-            }
-        } catch (error) {
-            // Ignora erros de jogos individuais (ex: jogo não vende mais, API falhou)
-            // console.error(`Erro ao atualizar appid ${game.appid}: ${error.message}`);
-        }
-    });
+---
 
-    // Roda as atualizações em sequência para não sobrecarregar a API
-    for (const promise of updatePromises) {
-        await promise();
-        await new Promise(resolve => setTimeout(resolve, 100)); // Pequeno delay
-    }
-    
-    console.log('[PriceUpdater] Atualização concluída.');
-    res.json({ message: 'Price update process finished.' });
-});
+## 🎨 NOVA ARQUITETURA PROPOSTA
 
+```
+SAE/
+├── index.html          # App principal
+├── level.html          # Sistema XP
+├── hall.html           # Hall da fama
+├── roleta.html         # Roleta
+├── precos.html         # Preços
+│
+├── pages/              # 🆕 NOVAS PÁGINAS
+│   ├── leaderboard.html
+│   ├── profile.html
+│   ├── badges.html
+│   ├── heatmap.html
+│   ├── compare.html
+│   └── museum.html     # 3D (BETA)
+│
+├── js/                 # 🆕 MODULARIZAÇÃO
+│   ├── core/
+│   │   ├── api.js
+│   │   ├── cache.js      # IndexedDB
+│   │   └── storage.js
+│   ├── features/
+│   │   ├── xp.js
+│   │   ├── challenges.js
+│   │   ├── badges.js
+│   │   ├── heatmap.js
+│   │   └── radar.js
+│   ├── integrations/
+│   │   ├── hltb.js
+│   │   ├── metacritic.js
+│   │   ├── itad.js       # IsThereAnyDeal
+│   │   └── protondb.js
+│   └── ui/
+│       ├── themes.js
+│       ├── modals.js
+│       └── animations.js
+│
+├── css/
+│   ├── base.css
+│   ├── themes.css
+│   └── components.css
+│
+├── assets/
+│   ├── badges/
+│   ├── sounds/
+│   └── models/         # 3D assets
+│
+├── api.php             # Backend PHP
+├── server.js           # Proxy Node.js
+├── sw.js               # 🆕 Service Worker
+├── manifest.json       # 🆕 PWA
+└── languages.js        # Traduções
+```
 
-// Rota para buscar preços do nosso DB
-app.get('/api/game-prices', (req, res) => {
-    const sql = `
-        SELECT g.appid, g.name, ph.price_usd, ph.timestamp
-        FROM games g
-        JOIN (
-            SELECT appid, MAX(timestamp) as max_time
-            FROM price_history
-            GROUP BY appid
-        ) as latest ON g.appid = latest.appid
-        JOIN price_history ph ON latest.appid = ph.appid AND latest.max_time = ph.timestamp
-        ORDER BY g.name
-    `;
+---
 
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            res.status(500).json({ "error": err.message });
-            return;
-        }
-        res.json({
-            "message": "success",
-            "data": rows
-        });
-    });
-});
+## 📋 PRÓXIMOS PASSOS IMEDIATOS
 
-// ===== HOWLONGTOBEAT INTEGRATION =====
-// Busca tempo estimado de jogo via scraping do HowLongToBeat
+### Esta Semana
+1. [ ] Escolher FASE prioritária
+2. [ ] Criar branch de desenvolvimento
+3. [ ] Implementar IndexedDB básico
+4. [ ] Adicionar seletor de idiomas na UI
 
-async function searchHLTB(gameName) {
-    try {
-        // HowLongToBeat não tem API oficial, usamos o endpoint de busca
-        const searchUrl = 'https://howlongtobeat.com/api/search';
-        
-        // O site usa um payload específico
-        const payload = {
-            searchType: 'games',
-            searchTerms: gameName.split(' '),
-            searchPage: 1,
-            size: 5,
-            searchOptions: {
-                games: {
-                    userId: 0,
-                    platform: '',
-                    sortCategory: 'popular',
-                    rangeCategory: 'main',
-                    rangeTime: { min: null, max: null },
-                    gameplay: { perspective: '', flow: '', genre: '' },
-                    rangeYear: { min: '', max: '' },
-                    modifier: ''
-                },
-                users: { sortCategory: 'postcount' },
-                filter: '',
-                sort: 0,
-                randomizer: 0
-            }
-        };
-        
-        const response = await axios.post(searchUrl, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Referer': 'https://howlongtobeat.com/',
-                'Origin': 'https://howlongtobeat.com'
-            },
-            timeout: 10000
-        });
-        
-        if (response.data && response.data.data && response.data.data.length > 0) {
-            const game = response.data.data[0];
-            return {
-                found: true,
-                name: game.game_name,
-                imageUrl: game.game_image ? `https://howlongtobeat.com/games/${game.game_image}` : null,
-                mainStory: game.comp_main ? Math.round(game.comp_main / 3600) : null, // segundos -> horas
-                mainExtra: game.comp_plus ? Math.round(game.comp_plus / 3600) : null,
-                completionist: game.comp_100 ? Math.round(game.comp_100 / 3600) : null,
-                allStyles: game.comp_all ? Math.round(game.comp_all / 3600) : null
-            };
-        }
-        
-        return { found: false };
-    } catch (error) {
-        console.error('[HLTB] Erro:', error.message);
-        return { found: false, error: error.message };
-    }
-}
+### Próxima Sprint
+1. [ ] HowLongToBeat integration
+2. [ ] Heatmap calendar
+3. [ ] Sistema de badges inicial
 
-// Endpoint para buscar tempo de jogo
-app.get('/api/hltb/:gamename', async (req, res) => {
-    const gameName = req.params.gamename;
-    
-    if (!gameName) {
-        return res.status(400).json({ error: 'Nome do jogo é obrigatório' });
-    }
-    
-    console.log(`[HLTB] Buscando: ${gameName}`);
-    
-    // Verificar cache no banco
-    const cacheSql = "SELECT * FROM game_details WHERE appid = ?";
-    
-    // Como não temos appid aqui, vamos buscar direto
-    const result = await searchHLTB(gameName);
-    
-    // Se encontrou, salvar no cache (precisaria do appid)
-    if (result.found) {
-        console.log(`[HLTB] Encontrado: ${result.name} - Main: ${result.mainStory}h`);
-    }
-    
-    res.json(result);
-});
+---
 
-// Endpoint para buscar HLTB por appid (com cache) - Usa pacote NPM howlongtobeat
-app.get('/api/hltb/appid/:appid', async (req, res) => {
-    const appid = req.params.appid;
-    const gameName = req.query.name;
-    
-    if (!appid || !gameName) {
-        return res.status(400).json({ error: 'AppID e nome são obrigatórios' });
-    }
-    
-    console.log(`[HLTB] Buscando para: ${gameName} (appid: ${appid})`);
-    
-    // Verificar cache
-    const cacheSql = "SELECT hltb_main, hltb_complete FROM game_details WHERE appid = ? AND hltb_main IS NOT NULL";
-    
-    db.get(cacheSql, [appid], async (err, row) => {
-        if (row && row.hltb_main) {
-            // Retornar do cache
-            console.log(`[HLTB] Cache hit para ${gameName}: ${row.hltb_main}h`);
-            return res.json({
-                found: true,
-                cached: true,
-                mainStory: row.hltb_main,
-                completionist: row.hltb_complete || row.hltb_main * 2
-            });
-        }
-        
-        try {
-            // Buscar usando o pacote NPM (mais confiável)
-            const cleanName = gameName
-                .replace(/[™®©]/g, '')
-                .replace(/\s*[-–—:]\s*(Definitive|Special|Complete|GOTY|Game of the Year|Remastered|Enhanced|Anniversary|Ultimate|Deluxe|Gold|Premium|Standard|Legacy|Extended|Director's Cut).*$/i, '')
-                .replace(/\s*\(.*?\)/g, '')
-                .trim();
-                
-            const results = await hltbService.search(cleanName);
-            
-            if (results && results.length > 0) {
-                const game = results[0];
-                const mainStory = Math.round(game.gameplayMain) || null;
-                const completionist = Math.round(game.gameplayCompletionist) || Math.round(game.gameplayMain * 2);
-                
-                console.log(`[HLTB] Encontrado: ${game.name} - Main: ${mainStory}h, 100%: ${completionist}h`);
-                
-                // Salvar no cache
-                if (mainStory) {
-                    const updateSql = `
-                        INSERT INTO game_details (appid, hltb_main, hltb_complete, last_updated)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                        ON CONFLICT(appid) DO UPDATE SET
-                        hltb_main = excluded.hltb_main,
-                        hltb_complete = excluded.hltb_complete,
-                        last_updated = excluded.last_updated
-                    `;
-                    db.run(updateSql, [appid, mainStory, completionist]);
-                }
-                
-                return res.json({
-                    found: true,
-                    cached: false,
-                    name: game.name,
-                    mainStory: mainStory,
-                    completionist: completionist,
-                    imageUrl: game.imageUrl
-                });
-            }
-            
-            // Fallback: tentar a busca manual
-            const manualResult = await searchHLTB(gameName);
-            if (manualResult.found && manualResult.mainStory) {
-                const updateSql = `
-                    INSERT INTO game_details (appid, hltb_main, hltb_complete, last_updated)
-                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                    ON CONFLICT(appid) DO UPDATE SET
-                    hltb_main = excluded.hltb_main,
-                    hltb_complete = excluded.hltb_complete,
-                    last_updated = excluded.last_updated
-                `;
-                db.run(updateSql, [appid, manualResult.mainStory, manualResult.completionist]);
-            }
-            res.json(manualResult);
-            
-        } catch (error) {
-            console.error(`[HLTB] Erro para ${gameName}:`, error.message);
-            res.json({ found: false, error: error.message });
-        }
-    });
-});
+## 📞 DECISÕES NECESSÁRIAS
 
-app.listen(3000, () => {
-    console.log('Server "Steam Workers" rodando na porta 3000');
-    console.log('Endpoints disponíveis:');
-    console.log('  - /api/profile?query=<steamid>');
-    console.log('  - /api/hltb/<gamename>');
-    console.log('  - /api/hltb/appid/<appid>?name=<gamename>');
-});
+1. **Prioridade de Fase?**
+   - [ ] Fase 1 (Técnico/Performance)
+   - [ ] Fase 2 (Dados/Visualização)
+   - [ ] Fase 3 (Gamificação)
+   - [ ] Fase 4 (Social)
+   - [ ] Fase 5 (Experimental)
+
+2. **Backend preferido?**
+   - [ ] Manter PHP + Node.js
+   - [ ] Migrar tudo para Node.js
+   - [ ] Adicionar API serverless
+
+3. **Hospedagem final?**
+   - [ ] XAMPP local apenas
+   - [ ] VPS próprio
+   - [ ] Vercel/Netlify + Supabase
+
+---
+
+## 📝 Notas de Implementação
+
+### IndexedDB Schema Proposto
+```javascript
+const stores = {
+  'games': { keyPath: 'appid', indexes: ['name', 'playtime'] },
+  'achievements': { keyPath: 'id', indexes: ['appid', 'unlocked'] },
+  'cache': { keyPath: 'key', indexes: ['timestamp'] },
+  'challenges': { keyPath: 'id', indexes: ['type', 'completed'] },
+  'badges': { keyPath: 'id', indexes: ['earnedAt'] }
+};
+```
+
+### APIs Externas Necessárias
+| API | Propósito | Limitações |
+|-----|-----------|------------|
+| Steam Web API | Jogos, Conquistas | Rate limit |
+| HowLongToBeat | Tempo de jogo | Sem API oficial (scraping) |
+| Metacritic | Notas | Sem API oficial (scraping) |
+| IsThereAnyDeal | Preços | API key gratuita |
+| ProtonDB | Compatibilidade Linux | API pública |
+
+---
+
+**🚀 Vamos construir algo incrível!**
+
+*Escolha uma fase para começarmos!*

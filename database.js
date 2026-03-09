@@ -1,160 +1,134 @@
-const sqlite3 = require('sqlite3').verbose();
+<?php
+// Configurações de Banco e API
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
 
-const DB_SOURCE = 'steam_data.db';
+$host = 'localhost';
+$db   = 'steam_explorer';
+$user = 'root';     // Seu usuário do MySQL (padrão do XAMPP é root)
+$pass = '';         // Sua senha do MySQL (padrão do XAMPP é vazio)
+$charset = 'utf8mb4';
 
-const db = new sqlite3.Database(DB_SOURCE, (err) => {
-    if (err) {
-        // Cannot open database
-        console.error(err.message);
-        throw err;
-    } else {
-        console.log('Conectado ao banco de dados SQLite.');
-        db.serialize(() => {
-            db.run(`CREATE TABLE IF NOT EXISTS games (
-                appid INTEGER PRIMARY KEY,
-                name TEXT NOT NULL
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'games'", err.message);
-                }
-            });
+$steam_api_key = '8B07FE7C9405216BF61C1F439E93922B';
 
-            db.run(`CREATE TABLE IF NOT EXISTS price_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                appid INTEGER NOT NULL,
-                price_usd INTEGER,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (appid) REFERENCES games(appid)
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'price_history'", err.message);
-                }
-            });
+$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
 
-            db.run(`CREATE TABLE IF NOT EXISTS user_xp (
-                steam_id TEXT PRIMARY KEY,
-                level INTEGER NOT NULL,
-                xp INTEGER NOT NULL,
-                last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'user_xp'", err.message);
-                }
-            });
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+    echo json_encode(['error' => 'Erro de conexão com Banco de Dados: ' . $e->getMessage()]);
+    exit;
+}
 
-            db.run(`CREATE TABLE IF NOT EXISTS game_details (
-                appid INTEGER PRIMARY KEY,
-                metacritic_score INTEGER,
-                hltb_main REAL,
-                hltb_complete REAL,
-                last_updated DATETIME
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'game_details'", err.message);
-                }
-            });
-            
-            // Adicionar coluna hltb_complete se não existir
-            db.run(`ALTER TABLE game_details ADD COLUMN hltb_complete REAL`, (err) => {
-                // Ignora erro se coluna já existe
-            });
+$action = $_GET['action'] ?? '';
 
-            // ===== NOVAS TABELAS PARA CACHE DE CONQUISTAS =====
-            
-            // Perfis de usuários Steam
-            db.run(`CREATE TABLE IF NOT EXISTS user_profiles (
-                steam_id TEXT PRIMARY KEY,
-                personaname TEXT,
-                avatar_url TEXT,
-                profile_url TEXT,
-                last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'user_profiles'", err.message);
-                }
-            });
-
-            // Jogos do usuário com stats de conquistas
-            db.run(`CREATE TABLE IF NOT EXISTS user_games (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                steam_id TEXT NOT NULL,
-                appid INTEGER NOT NULL,
-                name TEXT,
-                playtime_forever INTEGER DEFAULT 0,
-                percent INTEGER DEFAULT -1,
-                unlocked INTEGER DEFAULT 0,
-                total INTEGER DEFAULT 0,
-                has_achievements INTEGER DEFAULT 0,
-                last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(steam_id, appid)
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'user_games'", err.message);
-                }
-            });
-
-            // Conquistas individuais por usuário
-            db.run(`CREATE TABLE IF NOT EXISTS user_achievements (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                steam_id TEXT NOT NULL,
-                appid INTEGER NOT NULL,
-                apiname TEXT NOT NULL,
-                name TEXT,
-                description TEXT,
-                icon TEXT,
-                icongray TEXT,
-                unlocked INTEGER DEFAULT 0,
-                unlock_time INTEGER DEFAULT 0,
-                percent REAL DEFAULT 0,
-                last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(steam_id, appid, apiname)
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'user_achievements'", err.message);
-                }
-            });
-
-            // Schema de conquistas dos jogos (compartilhado entre usuários)
-            db.run(`CREATE TABLE IF NOT EXISTS game_achievement_schema (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                appid INTEGER NOT NULL,
-                apiname TEXT NOT NULL,
-                display_name TEXT,
-                description TEXT,
-                icon TEXT,
-                icongray TEXT,
-                global_percent REAL DEFAULT 0,
-                last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(appid, apiname)
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'game_achievement_schema'", err.message);
-                }
-            });
-
-            // Log de sincronizações
-            db.run(`CREATE TABLE IF NOT EXISTS sync_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                steam_id TEXT NOT NULL,
-                appid INTEGER,
-                sync_type TEXT,
-                items_synced INTEGER DEFAULT 0,
-                sync_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(steam_id, appid)
-            )`, (err) => {
-                if (err) {
-                    console.error("Erro ao criar tabela 'sync_log'", err.message);
-                }
-            });
-
-            // Criar índices para performance
-            db.run(`CREATE INDEX IF NOT EXISTS idx_user_games_steam_id ON user_games(steam_id)`);
-            db.run(`CREATE INDEX IF NOT EXISTS idx_user_achievements_steam_appid ON user_achievements(steam_id, appid)`);
-            db.run(`CREATE INDEX IF NOT EXISTS idx_game_schema_appid ON game_achievement_schema(appid)`);
-
-            console.log('✅ Todas as tabelas criadas/verificadas com sucesso');
-        });
+// -------------------------------------------------------
+// ROTA 1: BUSCAR PERFIL (Inteligente: Cache ou Live)
+// -------------------------------------------------------
+if ($action === 'get_profile') {
+    $input = $_GET['query'] ?? '';
+    
+    // 1. Resolver ID se não for numérico
+    $steamId = $input;
+    if (!is_numeric($input)) {
+        $vanity = str_replace(['https://steamcommunity.com/id/', '/'], '', $input);
+        $url = "http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=$steam_api_key&vanityurl=$vanity";
+        $json = file_get_contents($url);
+        $data = json_decode($json, true);
+        if ($data['response']['success'] == 1) {
+            $steamId = $data['response']['steamid'];
+        } else {
+            echo json_encode(['error' => 'Usuário não encontrado']);
+            exit;
+        }
     }
-});
 
-module.exports = db;
+    // 2. Verificar se existe no Banco de Dados (Cache Local)
+    // Se os dados tiverem menos de 24h, usamos o banco!
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE steam_id = ? AND last_updated > DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+    $stmt->execute([$steamId]);
+    $cachedUser = $stmt->fetch();
+
+    if ($cachedUser) {
+        // -- BUSCAR DO BANCO --
+        $gamesStmt = $pdo->prepare("SELECT app_id as appid, name, playtime_forever, achievements_total as total, achievements_unlocked as unlocked, completion_percent as percent, has_stats FROM user_games WHERE steam_id = ? ORDER BY playtime_forever DESC");
+        $gamesStmt->execute([$steamId]);
+        $games = $gamesStmt->fetchAll();
+
+        echo json_encode([
+            'source' => 'database', // Flag para debug
+            'user' => [
+                'steamid' => $cachedUser['steam_id'],
+                'personaname' => $cachedUser['personaname'],
+                'avatarfull' => $cachedUser['avatar_url']
+            ],
+            'games' => $games
+        ]);
+    } else {
+        // -- BUSCAR DA STEAM API (Primeira vez ou desatualizado) --
+        
+        // A) Perfil
+        $profileUrl = "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=$steam_api_key&steamids=$steamId";
+        $profileData = json_decode(file_get_contents($profileUrl), true);
+        $p = $profileData['response']['players'][0] ?? null;
+
+        if (!$p) { echo json_encode(['error' => 'Perfil privado ou erro API']); exit; }
+
+        // Salva/Atualiza Usuário
+        $upsertUser = $pdo->prepare("INSERT INTO users (steam_id, personaname, avatar_url, last_updated) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE personaname=?, avatar_url=?, last_updated=NOW()");
+        $upsertUser->execute([$p['steamid'], $p['personaname'], $p['avatarfull'], $p['personaname'], $p['avatarfull']]);
+
+        // B) Jogos
+        $gamesUrl = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=$steam_api_key&steamid=$steamId&include_appinfo=true&format=json";
+        $gamesData = json_decode(file_get_contents($gamesUrl), true);
+        $gamesList = $gamesData['response']['games'] ?? [];
+
+        $responseGames = [];
+        
+        // Prepara inserção em massa (mais rápido)
+        $insertGame = $pdo->prepare("INSERT INTO user_games (steam_id, app_id, name, playtime_forever) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE playtime_forever=VALUES(playtime_forever)");
+
+        foreach ($gamesList as $g) {
+            $insertGame->execute([$steamId, $g['appid'], $g['name'], $g['playtime_forever']]);
+            
+            $responseGames[] = [
+                'appid' => $g['appid'],
+                'name' => $g['name'],
+                'playtime_forever' => $g['playtime_forever'],
+                'percent' => -1, // Ainda não sabemos as conquistas
+                'has_stats' => 0
+            ];
+        }
+
+        echo json_encode([
+            'source' => 'steam_api',
+            'user' => $p,
+            'games' => $responseGames
+        ]);
+    }
+}
+
+// -------------------------------------------------------
+// ROTA 2: SALVAR ESTATÍSTICAS (Chamada pelos Workers JS)
+// -------------------------------------------------------
+if ($action === 'update_stats') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if ($data) {
+        $stmt = $pdo->prepare("UPDATE user_games SET achievements_total=?, achievements_unlocked=?, completion_percent=?, has_stats=1 WHERE steam_id=? AND app_id=?");
+        $stmt->execute([
+            $data['total'], 
+            $data['unlocked'], 
+            $data['percent'], 
+            $data['steamId'], 
+            $data['appId']
+        ]);
+        echo json_encode(['status' => 'saved']);
+    }
+}
+?>
